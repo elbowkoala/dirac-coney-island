@@ -3,12 +3,12 @@ pix2invA = 0.512*sqrt(110-4)*0.4631*(14/30)*(3.1415/180);
 load('new_fermi_finds.mat')
 %%%Run DPI_map_maker.m with correct E,k arrays%%%
 
-E_map_pix = reshape(draw_Es_904,31,31);
+E_map_pix = reshape(draw_Es_905,31,31);
 FL_map_pix = reshape(fermi_,31,31);
-K_map_pix = reshape(draw_ks_904,31,31);
-V_map_pix = (reshape(draw_As_904,31,31));
-B_map_pix = reshape(draw_Bs_904,31,31);
-MC_map = reshape(draw_MCs_904,31,31);
+K_map_pix = reshape(draw_ks_905,31,31);
+V_map_pix = (reshape(draw_As_905,31,31));
+B_map_pix = reshape(draw_Bs_905,31,31);
+MC_map = reshape(draw_MCs_905,31,31);
 
 DPI_map_maker;
 
