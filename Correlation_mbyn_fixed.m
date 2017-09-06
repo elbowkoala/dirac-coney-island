@@ -1,13 +1,13 @@
 
 
-table_title = 'scan 170829b, Es vs DPI';
-A_map = reshape(draw_Es_904,31,31);      %Vertical axis 
-B_map = DPI_map;%reshape(line_ks_829,31,31); %reshape(ABEK_ks,31,31);%DPI_map;   %Horizontal axis
-dirac_Es = draw_Es_904;   %input Energies vector (cone pixels)
-dirac_ks = draw_ks_904;   %input mtm vector (cone pixels)
+table_title = 'scan 170829b, Es vs ks';
+A_map = reshape(draw_Es_905,31,31);      %Vertical axis 
+B_map = reshape(draw_ks_905,31,31);%reshape(line_ks_829,31,31); %reshape(ABEK_ks,31,31);%DPI_map;   %Horizontal axis
+dirac_Es = draw_Es_905;   %input Energies vector (cone pixels)
+dirac_ks = draw_ks_905;   %input mtm vector (cone pixels)
 
-A_interval_list=[.6,.8];%; .3,.7; .2,.5; .5,.8];%[0,1; 0,0.3; 0.6,1; .2,.8];% 0,0.2; .1,.9; .3,.7]; %Setting the intervals 
-B_interval_list = [0,1; .5,1];%[0,1; 0,0.3; 0.6,1; .2,.8];% 0,0.8; .2,.8; 0,.7]; %[0,1; .3,1; .4,1; .5,1];%[0,1; .1,.9; .3,.7];%[0.1,1; 0.3,1; 0.6,1]; 
+A_interval_list=[0,1; .3,.7; .4,.65];%; .3,.7; .2,.5; .5,.8];%[0,1; 0,0.3; 0.6,1; .2,.8];% 0,0.2; .1,.9; .3,.7]; %Setting the intervals 
+B_interval_list = [0,1; .3,.7; .4,.65];%[0,1; 0,0.3; 0.6,1; .2,.8];% 0,0.8; .2,.8; 0,.7]; %[0,1; .3,1; .4,1; .5,1];%[0,1; .1,.9; .3,.7];%[0.1,1; 0.3,1; 0.6,1]; 
 
 
 
@@ -54,7 +54,7 @@ for iii=1:size(region_list,1)
     [region_arpes_symmetrized,Kaxis]=Symmetrized_spectra(region_arpes_binned,K_binned);
     subplot(size(A_interval_list,1),size(B_interval_list,1),iii)
     %imagesc(regional_arpes(:,:,iii)), axis xy
-    imagesc(Eaxis,Kaxis,region_arpes_binned(1:103,:)), axis xy;
+    imagesc(rot90(Eaxis,-1),rot90(Kaxis,-1),rot90(region_arpes_binned(1:103,:),-1)), %axis xy;
     %imagesc(Eaxis,Kaxis,region_arpes_symmetrized), axis xy;
     if iii == 1+size(B_interval_list,1)*nn
         ylabel([num2str(A_interval_list(nn+1,1)),'-',num2str(A_interval_list(nn+1,2))]);

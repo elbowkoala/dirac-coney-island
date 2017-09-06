@@ -1,6 +1,6 @@
 tic;
-scan_is = 1:num_scans;%769
-wannasee = 0;
+scan_is = 1;%1:num_scans;%769
+wannasee = 1;
 
 bin_E = 5;
 bin_k = 2;
@@ -9,16 +9,18 @@ fass_sigma = 1;
 LineWidth = 1;
 draw_sigma = 1;
 
-draw_box = zeros(61,65);
+draw_box = zeros(61,70);
 E_0 = 25;%20;
+E_B1 = 8;
+E_B2 = E_0 + 10;
 K_0 = round(size(draw_box,1)/2);
 draw_x = (1:size(draw_box,1))';
 draw_x0 = draw_x - K_0;
 
-A_range = [1.9];%1.5:.1:2.5;%[0.5:.5:3.0];%[.6:.2:2];%[1.8];%[1,2,3];
+A_range = 1.9;%[0.5:.5:3.0];%[.6:.2:2];%[1.8];%[1,2,3];
 B_range = 0;%:.005:.05;%[0:.002:.01];%[0,.05,.1];
 E_rough_range = round(15:2:70);
-K_rough_range = round(101/2 - round(size(draw_box,1)/2)) + (-20:2:20);
+K_rough_range = round(101/2 - round(size(draw_box,1)/2)) + (-10:2:10);
 E_ref_range = -8:1:8;
 K_ref_range = -3:1:3;
 
@@ -32,12 +34,12 @@ B_range_eVA = B_range * (bin_E/bin_k) * .8107;
 MC_TH = 0.65;
 multi_TH = 0.7;
 
-draw_Es_905 = zeros(1,num_scans);
-draw_ks_905 = zeros(1,num_scans);
-draw_As_905 = zeros(1,num_scans);
-draw_Bs_905 = zeros(1,num_scans);
-draw_MCs_905 = zeros(1,num_scans);
-draw_MCSs_905 = zeros(1,num_scans);
+%draw_Es_905 = zeros(1,num_scans);
+%draw_ks_905 = zeros(1,num_scans);
+%draw_As_905 = zeros(1,num_scans);
+%draw_Bs_905 = zeros(1,num_scans);
+%draw_MCs_905 = zeros(1,num_scans);
+%draw_MCSs_905 = zeros(1,num_scans);
 
 ABBA_ITs = zeros(size(draw_box,1),size(draw_box,2),length(A_range)*length(B_range));
 
@@ -71,7 +73,7 @@ for A_i = 1:length(A_range)
         ITP = mat2gray(ITP(:,:,1));
         ITN = mat2gray(ITN(:,:,1));
 
-        IT = IT_processor(ITP + ITN, draw_sigma);   
+        IT = IT_processor(ITP + ITN, draw_sigma, E_B1,E_B2);   
         
         ABBA_ITs(:,:,ABBA_IT_i) = IT;
         ABBA_IT_i = ABBA_IT_i+1;
@@ -111,6 +113,7 @@ for i = scan_is
         end
     end
     %good_spot_table = imgaussfilt(good_spot_table,1);
+    %figure, imagesc(rough_scan_table), axis xy
     [K_scan_center_i,E_scan_center_i] = find(rough_scan_table==max(rough_scan_table(:)));
     %%%%%%%%%%
     K_off_range = K_rough_range(K_scan_center_i) + K_ref_range;
@@ -169,6 +172,8 @@ for i = scan_is
     EK_ABBAnn_table = (EK_ABBAn_table-min(EK_ABBAn_table(:)))./(max(EK_ABBAn_table(:))-min(EK_ABBAn_table(:)));
     [max_a,max_b] = find(EK_ABBAnn_table>=MC_TH);
     corr_spread = length(max_a);
+    figure, imagesc(EK_ABBAnn_table), axis xy
+    
     
     %merp = sum(EK_ABBAnn_table(round(length(K_off_range)/2)-1:round(length(K_off_range)/2)+1,:));
     %[pks,locs,wdths,proms] = findpeaks(merp,'MinPeakDistance',5);
@@ -231,8 +236,8 @@ for i = scan_is
                  [1:size(draw_box,2)] + E_off_ABBAn_it ) = IT_IT;
         
              
-        K_conf_range = K_off_ABBAn_it + [-10:1:10];
-        E_conf_range = E_off_ABBAn_it + [-10:1:10];
+        K_conf_range = K_off_ABBAn_it + [-8:1:8];
+        E_conf_range = E_off_ABBAn_it + [-8:1:8];
         find_multi_ks_table = zeros(length(K_conf_range),length(E_conf_range));
         for E_conf_i = 1:length(E_conf_range)
             E_conf = E_conf_range(E_conf_i);
