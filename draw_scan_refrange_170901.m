@@ -1,30 +1,31 @@
 tic;
-scan_is = 151;%769
+scan_is = 51;%769
 wannasee = 1;
 
 bin_E = 5;
 bin_k = 2;
-fass_sigma = 2;
+fass_sigma = 1;
 
 LineWidth = 1;
 draw_sigma = 1;
 
-draw_box = zeros(51,55);
+draw_box = zeros(61,65);
 E_0 = 25;%20;
 K_0 = round(size(draw_box,1)/2);
 draw_x = (1:size(draw_box,1))';
 draw_x0 = draw_x - K_0;
 
-A_range = 1.5:.1:2.5;%[0.5:.5:3.0];%[.6:.2:2];%[1.8];%[1,2,3];
-B_range = 0:.005:.025;%[0:.002:.01];%[0,.05,.1];
+A_range = [1.9];%1.5:.1:2.5;%[0.5:.5:3.0];%[.6:.2:2];%[1.8];%[1,2,3];
+B_range = 0;%:.005:.05;%[0:.002:.01];%[0,.05,.1];
 E_rough_range = round(20:2:55);%round([30:2.5:60]);%round([26:2.5:50]);%round([25:2.5:50]);%[20:5:50];
 K_rough_range = round(101/2 - round(size(draw_box,1)/2)) + (-20:2:20);%round([10:2:30]);%round([10:2.5:25]);%[20:5:50];
-E_ref_range = -20:1:20;
-K_ref_range = -10:1:10;
+E_ref_range = -2:1:2;
+K_ref_range = -5:1:5;
 
-good_spot_A = 1.8;  %from raw_full_cone
-good_spot_B = 0.025; %from raw_full_cone
+good_spot_A = 1.9;  %from raw_full_cone
+good_spot_B = 0.0; %from raw_full_cone
 
+%from raw_full_cone 9/5/17, use A=1.9,B=0
 
 A_range_eVA = A_range * (bin_E/bin_k) * .8107;
 B_range_eVA = B_range * (bin_E/bin_k) * .8107;
@@ -131,7 +132,7 @@ for i = scan_is
             
             draww_scan_window_norm = window_processor(draww_scan_window); 
            
-            good_spot_table(K_rough_i,E_rough_i) = sum(dot(draww_scan_window_norm,IIT_cropped));
+            good_spot_table(K_rough_i,E_rough_i) = sum(dot(draww_scan_window_norm,IIT));
         end
     end
     %good_spot_table = imgaussfilt(good_spot_table,1);
@@ -195,8 +196,7 @@ for i = scan_is
     corr_spread = length(max_a);
     
     merp = sum(EK_ABBAnn_table(round(length(K_off_range)/2)-1:round(length(K_off_range)/2)+1,:));
-    [pks,locs,wdths,proms] = findpeaks(merp,'MinPeakDistance',5);
-    %figure, plot(merp)
+    %[pks,locs,wdths,proms] = findpeaks(merp,'MinPeakDistance',5);
     
     draw_Es_904(i) = (E_off_ABBAn_it + E_0) * bin_E + round(bin_E/2);
     draw_ks_904(i) = (K_off_ABBAn_it + K_0 + fass_k_off) * bin_k + round(bin_k/2);
@@ -204,7 +204,6 @@ for i = scan_is
     draw_Bs_904(i) = BAABn_it_it;
     draw_MCs_904(i) = MC_ABBAn_it;
     draw_MCSs_904(i) = corr_spread;
-    draw_peaks_904(i) = length(pks);
     
     if wannasee == 0.5 || 1
         %%%Re-make maxcorr for A vs B scan at the chosen E_off_it,K_off_it%%%
@@ -311,7 +310,7 @@ for i = scan_is
         %title('Best Draw Fit')
         
         ax2 = subplot(3,2,2);
-        imagesc(gray_multi_ks_table), axis xy
+        imagesc(good_spot_table), axis xy
         colormap(ax2, jet)
         title(['Find multi, above ',num2str(multi_TH),'=',num2str(ASDF)])
         
