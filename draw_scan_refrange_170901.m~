@@ -299,7 +299,7 @@ for i = scan_is
         gray_multi_ks_tablea = rot90(gray_multi_ks_table,-1);
         imagesc(gray_multi_ks_tablea), axis xy
         colormap(ax3, jet)
-        title({['Ref Scan'];['Pts > ',num2str(multi_TH),': ',num2str(ASDF)]},'FontSize',8)
+        title({['Ref Scan',]'Max Corr, above ',num2str(multi_TH),' = ',num2str(ASDF)],'FontSize',8)
         %yticks([1,length(K_off_range)])
         %yticklabels({num2str(K_off_range(1)+K_0),num2str(K_off_range(end)+K_0)})
         %ylabel('DP K (binned pixels, fass frame)','FontSize',8)

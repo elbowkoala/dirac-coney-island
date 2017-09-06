@@ -1,0 +1,23 @@
+load('new_fermi_finds.mat')
+dirac_Es = draw_Es_905_tails;
+dirac_ks = draw_ks_905_tails;
+
+aaaa = reshape(region_list{iii},1,961);
+aaaa = find(aaaa==1);
+[E_interp,K_interp] = meshgrid(-149.5:.5:300, -80:.5:80);
+
+DE_eV_ave = 0;
+for i = aaaa
+    cone = cones(:,:,i);
+    [E_coor,K_coor] = meshgrid(1:size(cone,2),1:size(cone,1));
+    E_coor = E_coor - dirac_Es(i);
+    K_coor = K_coor - dirac_ks(i);
+    interp_arpes = interp2(E_coor,K_coor,cone,E_interp,K_interp);
+    regional_arpes(:,:,i) = regional_arpes(:,:,i) + interp_arpes;
+    DPE_pix = dirac_Es(i);
+    FL_pix = fermi_(i);
+    DPK_pix = dirac_ks(i);
+    DE_eV = (FL_pix - DPE_pix)*E_resolve;
+    DE_eV_ave = DE_eV_ave + DE_eV;
+end
+DE_eV_ave = DE_eV_ave / length(aaaa);
