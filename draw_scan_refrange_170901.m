@@ -1,5 +1,5 @@
 tic;
-scan_is = 51;%769
+scan_is = 151;%769
 wannasee = 1;
 
 bin_E = 5;
@@ -8,9 +8,8 @@ fass_sigma = 2;
 
 LineWidth = 1;
 draw_sigma = 1;
-draw_margin = 0;
 
-draw_box = zeros(51+2*draw_margin,55+2*draw_margin);
+draw_box = zeros(51,55);
 E_0 = 25;%20;
 K_0 = round(size(draw_box,1)/2);
 draw_x = (1:size(draw_box,1))';
@@ -43,7 +42,12 @@ draw_MCSs_904 = zeros(1,num_scans);
 ABBA_rats_904 = zeros(1,num_scans);
 draw_peaks_904 = zeros(1,num_scans);
 
-ABBA_ITs = zeros(size(draw_box,1)-2*draw_margin,size(draw_box,2)-2*draw_margin,length(A_range)*length(B_range));
+ABBA_ITs = zeros(size(draw_box,1),size(draw_box,2),length(A_range)*length(B_range));
+
+
+
+
+
 
 %First create all the templates%%%
 ABBA_IT_i = 1;
@@ -75,21 +79,9 @@ for A_i = 1:length(A_range)
         ITP = mat2gray(ITP(:,:,1));
         ITN = mat2gray(ITN(:,:,1));
 
-        ITP = imgaussfilt(ITP,draw_sigma);
-        ITN = imgaussfilt(ITN,draw_sigma);
-
-        %ITP = ITP ./ sum(ITP(:));
-        %ITN = ITN ./ sum(ITN(:));
-
-        IT = ITP + ITN;
-
-        IT = (IT - min(IT(:)))./(max(IT(:))-min(IT(:)));
-        %IT = IT ./ sum(IT(:));     
-        IT_cropped = IT(1+draw_margin:end-draw_margin,1+draw_margin:end-draw_margin);
-        IT_cropped = IT_cropped ./ sum(IT_cropped(:));
-
-        ABBA_ITs(:,:,ABBA_IT_i) = IT_cropped;
-
+        IT = IT_processor(ITP + ITN, draw_sigma);   
+        
+        ABBA_ITs(:,:,ABBA_IT_i) = IT;
         ABBA_IT_i = ABBA_IT_i+1;
     end
 end
@@ -132,23 +124,12 @@ for i = scan_is
             IITP = mat2gray(IITP(:,:,1));
             IITN = mat2gray(IITN(:,:,1));
 
-            IITP = imgaussfilt(IITP,draw_sigma);
-            IITN = imgaussfilt(IITN,draw_sigma);
-
-            IIT = IITP + IITN;
-            IIT = (IIT - min(IIT(:)))./(max(IIT(:))-min(IIT(:)));
+            IIT = IT_processor(IITP + IITN, draw_sigma);
                
-            IIT_cropped = IIT(1+draw_margin:end-draw_margin,1+draw_margin:end-draw_margin);
-            IIT_cropped = IIT_cropped ./ sum(IIT_cropped(:));
-
-            draww_scan_window = fass([1+draw_margin:size(draw_box,1)-draw_margin]+K_rough,...
-                                    [1+draw_margin:size(draw_box,2)-draw_margin]+E_rough);
-            draww_scan_window_norm = draww_scan_window ./ sum(draww_scan_window(:));
-            %draww_scan_window_norm = (draww_scan_window - min(draww_scan_window(:))) ./ (max(draww_scan_window(:))-min(draww_scan_window(:))); %draw_scan_window ./ sum(draw_scan_window(:));   
-
-            %%%%%
-            %draw_scan_window_norm = draw_scan_window_norm - mean(draw_scan_window_norm(:));
-            %%%%%%
+            draww_scan_window = fass([1:size(draw_box,1)]+K_rough,...
+                                    [1:size(draw_box,2)]+E_rough);
+            
+            draww_scan_window_norm = window_processor(draww_scan_window); 
            
             good_spot_table(K_rough_i,E_rough_i) = sum(dot(draww_scan_window_norm,IIT_cropped));
         end
@@ -182,13 +163,9 @@ for i = scan_is
                 for B_i = 1:length(B_range)
                     B = B_range(B_i);
                     
-                    draw_scan_window = fass([1+draw_margin:size(draw_box,1)-draw_margin]+K_off,...
-                                            [1+draw_margin:size(draw_box,2)-draw_margin]+E_off);
-                    %draw_scan_window_norm = (draw_scan_window - min(draw_scan_window(:))) ./ (max(draw_scan_window(:))-min(draw_scan_window(:))); %draw_scan_window ./ sum(draw_scan_window(:));   
-                    draw_scan_window_norm = draw_scan_window ./ sum(draw_scan_window(:));
-                    %%%%%
-                    %draw_scan_window_norm = draw_scan_window_norm - mean(draw_scan_window_norm(:));
-                    %%%%%%
+                    draw_scan_window = fass([1:size(draw_box,1)]+K_off,...
+                                            [1:size(draw_box,2)]+E_off);
+                    draw_scan_window_norm = window_processor(draw_scan_window);
                     
                     ABBA_norm_table(A_i,B_i) = sum(dot(draw_scan_window_norm,ABBA_ITs(:,:,ABBA_IT_i)));
                     ABBA_IT_i = ABBA_IT_i+1;
@@ -239,15 +216,10 @@ for i = scan_is
             for B_i = 1:length(B_range)
                 B = B_range(B_i);
                 
-                draw_scan_window_itt = fass([1+draw_margin:size(draw_box,1)-draw_margin]+K_off_ABBAn_it,...
-                                [1+draw_margin:size(draw_box,2)-draw_margin]+E_off_ABBAn_it);
-                draw_scan_window_norm_itt = (draw_scan_window_itt-min(draw_scan_window_itt(:)))./(max(draw_scan_window_itt(:))-min(draw_scan_window_itt(:))); %draw_scan_window_itt ./ sum(draw_scan_window_itt(:));  
-                draw_scan_window_norm_itt = draw_scan_window_norm_itt ./ sum(draw_scan_window_norm_itt(:));
-                %%%%%%
-                %draw_scan_window_norm_itt = draw_scan_window_norm_itt - mean(draw_scan_window_norm_itt(:));
-                %%%%%
+                draw_scan_window_itt = fass([1:size(draw_box,1)]+K_off_ABBAn_it,...
+                                [1:size(draw_box,2)]+E_off_ABBAn_it);
+                draw_scan_window_norm_itt = window_processor(draw_scan_window_itt);
 
-                %ABBA_norm_table_it(A_i,B_i) = sum(dot(draw_scan_window_norm_itt,ITTT_cropped));
                 ABBA_norm_table_it(A_i,B_i) = sum(dot(draw_scan_window_norm_itt,ABBA_ITs(:,:,ABBA_IT_i)));
                 ABBA_IT_i = ABBA_IT_i+1;
             end
@@ -294,26 +266,15 @@ for i = scan_is
         ITTP = mat2gray(ITTP(:,:,1));
         ITTN = mat2gray(ITTN(:,:,1));
 
-        ITTP = imgaussfilt(ITTP,draw_sigma);
-        ITTN = imgaussfilt(ITTN,draw_sigma);
+        ITT = IT_processor(ITTP + ITTN, draw_sigma);
 
-        ITT = ITTP + ITTN;
+        draw_scan_window_it = fass([1:size(draw_box,1)]+K_off_ABBAn_it,...
+                                [1:size(draw_box,2)]+E_off_ABBAn_it);
+        draw_scan_window_norm_it = window_processor(draw_scan_window_it);%draw_scan_window_it ./ sum(draw_scan_window_it(:));
 
-        ITT = (ITT - min(ITT(:))) ./ (max(ITT(:))-min(ITT(:)));
-        %ITT = ITT ./ sum(ITT(:));
-        ITT_cropped = ITT(1+draw_margin:end-draw_margin,1+draw_margin:end-draw_margin);
-        ITT_cropped = ITT_cropped ./ sum(ITT_cropped(:));
-
-        draw_scan_window_it = fass([1+draw_margin:size(draw_box,1)-draw_margin]+K_off_ABBAn_it,...
-                                [1+draw_margin:size(draw_box,2)-draw_margin]+E_off_ABBAn_it);
-        %draw_scan_window_norm_it = (draw_scan_window_it - min(draw_scan_window_it(:)))./(max(draw_scan_window_it(:))-min(draw_scan_window_it(:))); %draw_scan_window_it ./ sum(draw_scan_window_it(:)); 
-        draw_scan_window_norm_it = draw_scan_window_it ./ sum(draw_scan_window_it(:));
-        %%%%%%%%%%%%%
-        %draw_scan_window_norm_it = draw_scan_window_norm_it - mean(draw_scan_window_norm_it(:));
-        %%%%%%%%%%%
         draw_pic_it = zeros(size(fass));
-        draw_pic_it([1+draw_margin:size(draw_box,1)-draw_margin] + K_off_ABBAn_it,...
-                 [1+draw_margin:size(draw_box,2)-draw_margin] + E_off_ABBAn_it ) = ITT_cropped;
+        draw_pic_it([1:size(draw_box,1)] + K_off_ABBAn_it,...
+                 [1:size(draw_box,2)] + E_off_ABBAn_it ) = ITT;
         
              
         K_conf_range = K_off_ABBAn_it + [-10:1:10];
@@ -324,13 +285,10 @@ for i = scan_is
             for K_conf_i = 1:length(K_conf_range)
                 K_conf = K_conf_range(K_conf_i);
                 
-                drawww_scan_window = fass([1+draw_margin:size(draw_box,1)-draw_margin]+K_conf,...
-                                    [1+draw_margin:size(draw_box,2)-draw_margin]+E_conf);
-                %drawww_scan_window_norm = (draww_scan_window - min(draww_scan_window(:))) ./ (max(draww_scan_window(:))-min(draww_scan_window(:))); %draw_scan_window ./ sum(draw_scan_window(:));   
-                drawww_scan_window_norm = drawww_scan_window ./ sum(drawww_scan_window(:));
-                %%%%%
-                %draw_scan_window_norm = draw_scan_window_norm - mean(draw_scan_window_norm(:));
-                %%%%%%
+                drawww_scan_window = fass([1:size(draw_box,1)]+K_conf,...
+                                    [1:size(draw_box,2)]+E_conf);
+                drawww_scan_window_norm = window_processor(drawww_scan_window);%drawww_scan_window ./ sum(drawww_scan_window(:));
+              
                 ABBA_IT_i = find(A_range == ABBAn_it_it);
                 BAAB_IT_i = find(B_range == BAABn_it_it);
                 find_multi_ks_table(K_conf_i,E_conf_i) = sum(dot(drawww_scan_window_norm,ABBA_ITs(:,:,(ABBA_IT_i-1)*length(B_range)+BAAB_IT_i)));
@@ -412,7 +370,16 @@ for i = scan_is
     end
 end
 
-
-
-
 toc;
+
+function processed_IT = IT_processor(input_IT, draw_sigma)
+processed_IT_ = imgaussfilt(input_IT,draw_sigma);
+processed_IT_ = mat2gray(processed_IT_);
+processed_IT = processed_IT_ ./ sum(processed_IT_(:));
+end
+
+function processed_window = window_processor(input_window)
+processed_window = input_window ./ sum(input_window(:));
+end
+
+
