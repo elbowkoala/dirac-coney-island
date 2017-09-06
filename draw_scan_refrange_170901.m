@@ -37,12 +37,12 @@ B_range_eVA = B_range * (bin_E/bin_k) * .8107;
 MC_TH = 0.65;
 multi_TH = 0.7;
 
-draw_Es_905_tails = zeros(1,num_scans);
-draw_ks_905_tails = zeros(1,num_scans);
-draw_As_905_tails = zeros(1,num_scans);
-draw_Bs_905_tails = zeros(1,num_scans);
-draw_MCs_905_tails = zeros(1,num_scans);
-draw_MCSs_905_tails = zeros(1,num_scans);
+draw_Es_906 = zeros(1,num_scans);
+draw_ks_906 = zeros(1,num_scans);
+draw_As_906 = zeros(1,num_scans);
+draw_Bs_906 = zeros(1,num_scans);
+draw_MCs_906 = zeros(1,num_scans);
+draw_MCSs_906 = zeros(1,num_scans);
 
 ABBA_ITs = zeros(size(draw_box,1),size(draw_box,2),length(A_range)*length(B_range));
 
@@ -181,12 +181,12 @@ for i = scan_is
     %merp = sum(EK_ABBAnn_table(round(length(K_off_range)/2)-1:round(length(K_off_range)/2)+1,:));
     %[pks,locs,wdths,proms] = findpeaks(merp,'MinPeakDistance',5);
     
-    draw_Es_905_tails(i) = (E_off_ABBAn_it + E_0) * bin_E + round(bin_E/2);
-    draw_ks_905_tails(i) = (K_off_ABBAn_it + K_0 + fass_k_off) * bin_k + round(bin_k/2);
-    draw_As_905_tails(i) = ABBAn_it_it;
-    draw_Bs_905_tails(i) = BAABn_it_it;
-    draw_MCs_905_tails(i) = MC_ABBAn_it;
-    draw_MCSs_905_tails(i) = corr_spread;
+    draw_Es_906(i) = (E_off_ABBAn_it + E_0) * bin_E + round(bin_E/2);
+    draw_ks_906(i) = (K_off_ABBAn_it + K_0 + fass_k_off) * bin_k + round(bin_k/2);
+    draw_As_906(i) = ABBAn_it_it;
+    draw_Bs_906(i) = BAABn_it_it;
+    draw_MCs_906(i) = MC_ABBAn_it;
+    draw_MCSs_906(i) = corr_spread;
     
     if wannasee == 0.5 || 1
         %{

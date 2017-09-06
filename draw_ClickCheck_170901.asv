@@ -1,6 +1,6 @@
-map_to_click = reshape(DPIs,31,31); %%Input your map here%%%
+map_to_click = reshape(ABBA_rats,31,31); %%Input your map here%%%
 dirac_Es = draw_Es_905_tails;   %%%%Input your E vector (units of frame pixels)
-dirac_ks = draw_ks_905_tails;   %%%%Input your k vector
+dirac_ks = draw_ks;   %%%%Input your k vector
 
 %%%%%%%%%%%%%
 click_map = figure;
@@ -19,13 +19,13 @@ while abcd==1
 
     [fass, fass_k_off] = kLOSfinder5(cones(:,:,clicked_i),bin_E,bin_k);
     fass = imgaussfilt(fass,fass_sigma);
-    %%%%%%%%%%
-    E_off_ABBAn_it = ((draw_Es_905_tails(clicked_i) - round(bin_E/2))/bin_E) - E_0;
-    K_off_ABBAn_it = ((draw_ks_905_tails(clicked_i) - round(bin_k/2))/bin_k) - K_0 - fass_k_off;
-    ABBAn_it_it = draw_As_905_tails(clicked_i);
-    BAABn_it_it = draw_Bs_905_tails(clicked_i);
-    MC_ABBAn_it = draw_MCs_905_tails(clicked_i);
-    %%%%%%%%%%%%
+    
+    E_off_ABBAn_it = ((draw_Es(clicked_i) - round(bin_E/2))/bin_E) - E_0;
+    K_off_ABBAn_it = ((draw_ks(clicked_i) - round(bin_k/2))/bin_k) - K_0 - fass_k_off;
+    ABBAn_it_it = draw_As(clicked_i);
+    BAABn_it_it = draw_Bs(clicked_i);
+    MC_ABBAn_it = draw_MCs(clicked_i);
+    
     draw_yp_it_it = ABBAn_it_it*(draw_x-K_0) + BAABn_it_it*((draw_x-K_0).^2) + E_0;
     draw_yn_it_it = -ABBAn_it_it*(draw_x-K_0) + BAABn_it_it*((draw_x-K_0).^2) + E_0;
     

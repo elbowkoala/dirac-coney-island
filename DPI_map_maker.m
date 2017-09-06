@@ -1,6 +1,6 @@
 %function [DPI_map] = DPI_map_maker(dirac_Es,dirac_ks,Epixwidth,kpixwidth)
-dirac_Es = E_map_pix;
-dirac_ks = K_map_pix;
+dirac_Es = draw_Es_905_tails;
+dirac_ks = draw_ks_905_tails;
 Epixwidth = 100;
 kpixwidth = 100;
 

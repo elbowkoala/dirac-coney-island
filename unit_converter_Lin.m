@@ -8,7 +8,7 @@ Scan1 = cones(:,:,i);
 %Cent_K=188;
 
 Cent_FL = round(fermi_(i));
-Cent_K = round(line_ks(i));
+Cent_K = round(draw_ks_905_tails(i));
 
 % Cent_K=188; scan6
 % Cent_K=188; scan5

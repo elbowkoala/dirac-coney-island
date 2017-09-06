@@ -41,13 +41,8 @@ K_resolve_approx = 0.512*0.04631/180*3.1415*14/30*sqrt(110-4);
 regional_arpes_binned = Binning_2d(regional_arpes,E_bin,K_bin);
 [region_arpes_symmetrized,Kaxis]=Symmetrized_spectra(region_arpes_binned,K_binned);
 
-figure 
-%subplot(1,2,2)
-imagesc(Kaxis, flip(Eaxis), rot90(regional_arpes)), axis xy
-yticks([0,-(DE_eV_ave/E_resolve)])
-yticklabels({num2str(DE_eV_ave),'0'})
-ylabel_str = ' E - E$_{F}$, (eV)';% \int_{0}^{2} x^2\sin(x) dx $$'
-ylabel(ylabel_str,'Interpreter','latex')
-xticks([-50,0,50])
-xticklabels({num2str(-50*K_resolve_approx),'0',num2str(50*K_resolve_approx)})
-xlabel('Momentum ({\AA}$^{-1}$)','Interpreter','latex')
+figure, imagesc(Eaxis, Kaxis, regional_arpes), axis xy
+xticks([0,-(DE_eV_ave/E_resolve)])
+xticklabels({num2str(DE_eV_ave),'0'})
+yticks([-50,0,50])
+yticklabels({num2str
