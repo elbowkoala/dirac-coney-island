@@ -10,6 +10,8 @@ B_interval_list=[0,0.05; 0.05, .1; .1,0.15;0.15,.2]+0.5;
 % A_interval_list=[0,1; .3,.7; .4,.65];%; .3,.7; .2,.5; .5,.8];%[0,1; 0,0.3; 0.6,1; .2,.8];% 0,0.2; .1,.9; .3,.7]; %Setting the intervals 
 A_interval_list = [0,.4];%[0,1; 0,0.3; 0.6,1; .2,.8];% 0,0.8; .2,.8; 0,.7]; %[0,1; .3,1; .4,1; .5,1];%[0,1; .1,.9; .3,.7];%[0.1,1; 0.3,1; 0.6,1]; 
 
+
+pix2eV = (1.599/(2*496));
 pix2invA = 0.512*0.04631/180*3.1415*14/30*sqrt(110-4);
 
 
@@ -83,13 +85,16 @@ for iii=1:size(region_list,1)
     %yt = get(gca, 'YTick');
     %set(gca, 'FontSize',7)
     %ytickangle(90)
-    ylim([-0.65,0.1])
+    ylim([-0.75,0.1])
     %xticks([-50,0,50])
     %xticklabels({num2str(-50*pix2invA),'0',num2str(50*pix2invA)})
     xlabel('Momentum ({\AA}$^{-1}$)','Interpreter','latex','FontSize',8)
     %xt = get(gca, 'XTick');
     %set(gca, 'FontSize', 7)
     if iii == 1+size(B_interval_list,1)*nn
+        descrr = {[num2str(A_interval_list(nn+1,1)),'-',num2str(A_interval_list(nn+1,2))]};
+        axes(ax)
+        text(-0.2,-0.3,descrr')
         %ylabel([num2str(A_interval_list(nn+1,1)),'-',num2str(A_interval_list(nn+1,2))]);
         nn=nn+1;
     end 
