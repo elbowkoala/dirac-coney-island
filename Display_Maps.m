@@ -1,5 +1,5 @@
 pix2eV = (1.599/(2*496));
-pix2invA = 0.512*sqrt(110-4)*0.4631*(14/30)*(3.1415/180);
+pix2invA = 0.512*sqrt(110-4)*0.04631*(14/30)*(3.1415/180);
 load('new_fermi_finds.mat')
 %%%Run DPI_map_maker.m with correct E,k arrays%%%
 

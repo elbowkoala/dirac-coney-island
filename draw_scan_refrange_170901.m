@@ -277,7 +277,7 @@ for i = scan_is
         %title('Best Draw Fit')
         
         ax2 = subplot(2,4,5);
-        rough_scan_tablea = rot90(rough_scan_tablea,-1);
+        rough_scan_tablea = rot90(rough_scan_table,-1);
         imagesc(rough_scan_tablea), axis xy
         colormap(ax2, jet)
         title('Rough scan','FontSize',8)

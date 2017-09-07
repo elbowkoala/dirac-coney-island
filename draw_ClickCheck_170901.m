@@ -1,6 +1,6 @@
-map_to_click = reshape(DPIs,31,31); %%Input your map here%%%
-dirac_Es = draw_Es_905_tails;   %%%%Input your E vector (units of frame pixels)
-dirac_ks = draw_ks_905_tails;   %%%%Input your k vector
+map_to_click = reshape(draw_MCSs_906,31,31); %%Input your map here%%%
+dirac_Es = draw_Es_906;   %%%%Input your E vector (units of frame pixels)
+dirac_ks = draw_ks_906;   %%%%Input your k vector
 
 %%%%%%%%%%%%%
 click_map = figure;
@@ -20,11 +20,11 @@ while abcd==1
     [fass, fass_k_off] = kLOSfinder5(cones(:,:,clicked_i),bin_E,bin_k);
     fass = imgaussfilt(fass,fass_sigma);
     %%%%%%%%%%
-    E_off_ABBAn_it = ((draw_Es_905_tails(clicked_i) - round(bin_E/2))/bin_E) - E_0;
-    K_off_ABBAn_it = ((draw_ks_905_tails(clicked_i) - round(bin_k/2))/bin_k) - K_0 - fass_k_off;
-    ABBAn_it_it = draw_As_905_tails(clicked_i);
-    BAABn_it_it = draw_Bs_905_tails(clicked_i);
-    MC_ABBAn_it = draw_MCs_905_tails(clicked_i);
+    E_off_ABBAn_it = ((draw_Es_906(clicked_i) - round(bin_E/2))/bin_E) - E_0;
+    K_off_ABBAn_it = ((draw_ks_906(clicked_i) - round(bin_k/2))/bin_k) - K_0 - fass_k_off;
+    ABBAn_it_it = draw_As_906(clicked_i);
+    BAABn_it_it = draw_Bs_906(clicked_i);
+    MCS_ABBAn_it = draw_MCSs_906(clicked_i);
     %%%%%%%%%%%%
     draw_yp_it_it = ABBAn_it_it*(draw_x-K_0) + BAABn_it_it*((draw_x-K_0).^2) + E_0;
     draw_yn_it_it = -ABBAn_it_it*(draw_x-K_0) + BAABn_it_it*((draw_x-K_0).^2) + E_0;
@@ -148,11 +148,11 @@ while abcd==1
     %text(0.2,0.5,{['A (eVA) :  ',num2str(A_it_it*bin_E/bin_k*.8107)];['B (eVA) :  ',num2str(B_it_it*bin_E/bin_k*.8107)];['MC:  ',num2str(MC_it)];...
     text(0.2,0.5,{...
         ['          i = ',num2str(clicked_i)];...
-        ['A (bpix units):          ',num2str(ABBAn_it_it)];...
-        ['B (bpix units):          ',num2str(BAABn_it_it)];...
-        ['MC (faswin normed):      ',num2str(MC_ABBAn_it)];...
-        ['DP E coor (bpix units):  ',num2str(E_off_ABBAn_it+E_0)];...
-        ['DP K coor (bpix units):  ',num2str(K_off_ABBAn_it+K_0)]} ,'FontName',FixedWidth);
+        ['A (bpix):         ',num2str(ABBAn_it_it)];...
+        ['B (bpix):         ',num2str(BAABn_it_it)];...
+        ['MCS :             ',num2str(MCS_ABBAn_it)];...
+        ['DP E coor (bpix): ',num2str(E_off_ABBAn_it+E_0)];...
+        ['DP K coor (bpix): ',num2str(K_off_ABBAn_it+K_0)]} ,'FontName',FixedWidth);
     axis off
     
     %{
