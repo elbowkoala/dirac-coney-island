@@ -1,7 +1,7 @@
 tic;
 scan_is = round(961*rand);
 %769
-wannasee = 1;
+wannasee = 0;
 
 bin_E = 5;
 bin_k = 2;
@@ -36,16 +36,16 @@ B_range_eVA = B_range * (bin_E/bin_k) * .8107;
 
 MC_TH = 0.65;
 multi_TH = 0.7;
-%{
-draw_Es_908 = zeros(1,num_scans);
-draw_ks_908 = zeros(1,num_scans);
-draw_As_908 = zeros(1,num_scans);
+
+draw_Es_907 = zeros(1,num_scans);
+draw_ks_907 = zeros(1,num_scans);
+draw_As_907 = zeros(1,num_scans);
 draw_Bs_908 = zeros(1,num_scans);
 draw_MCs_908 = zeros(1,num_scans);
 draw_MCSs_908 = zeros(1,num_scans);
 draw_rats_908 = zeros(1,num_scans);
 piccolos = zeros(1,num_scans);
-%}
+
 ABBA_ITs = zeros(size(draw_box,1),size(draw_box,2),length(A_range)*length(B_range));
 
 %First create all the templates%%%
@@ -283,7 +283,7 @@ for i = scan_is
     ABBA_IT_i = find(A_range == ABBAn_it_it);
     BAAB_IT_i = find(B_range == BAABn_it_it);
     IT_IT = ABBA_ITs(:,:,(ABBA_IT_i-1)*length(B_range)+BAAB_IT_i);
-    
+    %{
     krillin_yp = A*(draw_x0) + B*((draw_x0).^2) + E_0;
     krillin_yn = -A*(draw_x0) + B*((draw_x0).^2) + E_0;
 
@@ -317,12 +317,12 @@ for i = scan_is
     krillin(gohan.PixelIdxList{1})=0;
     krillin(gohan.PixelIdxList{2})=0;
     krillin(gohan.PixelIdxList{3})=0;
-    
+    %}
     draw_scan_window_it = fass([1:size(draw_box,1)]+K_off_ABBAn_it,...
                             [1:size(draw_box,2)]+E_off_ABBAn_it);
     draw_scan_window_norm_it = window_processor(draw_scan_window_it); 
     
-    piccolo = sum(dot(krillin,draw_scan_window_it));
+    %piccolo = sum(dot(krillin,draw_scan_window_it));
     
     sumbot = sum(draw_scan_window_norm_it(1:K_0,1:E_0+10));
     sumtop = sum(draw_scan_window_norm_it(K_0+1:end,1:E_0+10));
@@ -337,10 +337,10 @@ for i = scan_is
     mean_rats = nanmean(sumbot./sumtop);
     
     
-    draw_Es_908(i) = (E_off_ABBAn_it + E_0) * bin_E + round(bin_E/2);
-    draw_ks_908(i) = (K_off_ABBAn_it + K_0 + fass_k_off) * bin_k + round(bin_k/2);
-    draw_As_908(i) = ABBAn_it_it;
-    draw_Bs_908(i) = BAABn_it_it;
+    draw_Es_907(i) = (E_off_ABBAn_it + E_0) * bin_E + round(bin_E/2);
+    draw_ks_907(i) = (K_off_ABBAn_it + K_0 + fass_k_off) * bin_k + round(bin_k/2);
+    draw_As_907(i) = ABBAn_it_it;
+    draw_Bs_907(i) = BAABn_it_it;
     draw_MCs_908(i) = MC_ABBAn_it;
     draw_MCSs_908(i) = corr_spread;
     
@@ -440,7 +440,7 @@ for i = scan_is
         %ylabel('A term (pixel units)','FontSize',8)
 
         ax6 = subplot(2,4,[3,4,7,8]);
-        E = mat2gray(norman(fass(16:end-15,:),0,30));
+        E = mat2gray(fass(16:end-15,:));
         Ea = rot90(E,-1);
         I = mat2gray(draw_pic_it(16:end-15,:));
         Ia = rot90(I,-1);
