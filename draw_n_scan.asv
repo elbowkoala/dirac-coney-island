@@ -1,30 +1,31 @@
 tic;
-scan_is = round(961*rand);
+scan_is =  1;%round(rand*961);
 %769
-wannasee = 0;
+wannasee = 1;
 
 bin_E = 5;
 bin_k = 2;
-fass_sigma = .1;
+fass_sigma = 2.5;
 
 LineWidth = 1;
-draw_sigma = 1.5;
+draw_sigma = 2.5;
+krillin_sigma = 1;
 
-draw_box = zeros(61,70);
-E_0 = 25;%20;
-E_B1 = 3;
-E_B2 = size(draw_box,2) - 10;
+draw_box = zeros(61,61);
+E_0 = 20;%20;
+E_B1 =2;
+E_B2 = size(draw_box,2)-3;
 K_0 = round(size(draw_box,1)/2);
 draw_x = (1:size(draw_box,1))';
 draw_x0 = draw_x - K_0;
 
-A_range = [1.75:.05:1.95];%[0.5:.5:3.0];%[.6:.2:2];%[1.8];%[1,2,3];
-B_range = 0:.002:.01;%[0:.002:.01];%[0,.05,.1];
-E_rough_range = round(25:2:55);
-K_rough_range = round(101/2 - round(size(draw_box,1)/2)) + (-10:2:10);
+A_range = [1.5:.05:2.1];%[0.5:.5:3.0];%[.6:.2:2];%[1.8];%[1,2,3];
+B_range = 0:.001:.005;%[0:.002:.01];%[0,.05,.1];
+E_rough_range = round(35:2:60);
+K_rough_range = round(101/2 - round(size(draw_box,1)/2)) + (-20:2:20);
 E_ref_range = -8:1:8;
 K_ref_range = -3:1:3;
-E_conff_range = -8:1:8;
+E_conff_range = -5:1:5;
 K_conff_range = -5:1:5;
 
 rough_scan_A = 1.85; 
@@ -37,15 +38,15 @@ B_range_eVA = B_range * (bin_E/bin_k) * .8107;
 MC_TH = 0.65;
 multi_TH = 0.7;
 
-draw_Es_907 = zeros(1,num_scans);
-draw_ks_907 = zeros(1,num_scans);
-draw_As_907 = zeros(1,num_scans);
-draw_Bs_908 = zeros(1,num_scans);
-draw_MCs_908 = zeros(1,num_scans);
-draw_MCSs_908 = zeros(1,num_scans);
-draw_rats_908 = zeros(1,num_scans);
-piccolos = zeros(1,num_scans);
-
+draw_Es_915d = zeros(1,num_scans);
+draw_ks_915d = zeros(1,num_scans);
+draw_As_915d = zeros(1,num_scans);
+draw_Bs_915d = zeros(1,num_scans);
+draw_MCs_915d = zeros(1,num_scans);
+draw_MCSs_915d = zeros(1,num_scans);
+draw_rats_915d = zeros(1,num_scans);
+piccolos_915d = zeros(1,num_scans);
+%}
 ABBA_ITs = zeros(size(draw_box,1),size(draw_box,2),length(A_range)*length(B_range));
 
 %First create all the templates%%%
@@ -106,7 +107,7 @@ for i = scan_is
     cone = cones(:,:,i);
     [fass,fass_k_off] = kLOSfinder5(cone,bin_E,bin_k);
     fass = imgaussfilt(fass,fass_sigma);
-   % fass = imgaussfilt(krillins,fass_sigma);
+    %fass = imgaussfilt(krillins,fass_sigma);
 
     %%Scan first round to find where to scan more closely
     rough_scan_table = zeros(size(length(K_rough_range),length(E_rough_range)));
@@ -228,9 +229,9 @@ for i = scan_is
             
     
     
-    EK_ABBAn_table = zeros(size(length(K_off_range),length(E_off_range)));
-    EK_ABBAn_A_table = zeros(size(length(K_off_range),length(E_off_range)));
-    EK_ABBAn_B_table = zeros(size(length(K_off_range),length(E_off_range)));
+    EK_AB_MC_table = zeros(size(length(K_off_range),length(E_off_range)));
+    EK_AB_A_table = zeros(size(length(K_off_range),length(E_off_range)));
+    EK_AB_B_table = zeros(size(length(K_off_range),length(E_off_range)));
 
     %%%Now the actual scanning across E and k
     for E_off_i = 1:length(E_off_range)
@@ -238,78 +239,86 @@ for i = scan_is
 
         for K_off_i = 1:length(K_off_range)
             K_off = K_off_range(K_off_i);
+            
+            %Continue to next E,K coordinate if current one makes fit box
+            %out of bounds of fass
+            if (1+K_off<=0) || (size(draw_box,1)+K_off>=size(fass,1)) || (1+E_off<=0) || (size(draw_box,2)+E_off>=size(fass,2));
+                EK_AB_MC_table(K_off_i,E_off_i) = 0;
+                EK_AB_A_table(K_off_i,E_off_i) = 0;
+                EK_AB_B_table(K_off_i,E_off_i) = 0;      
 
-            AB_MC_table = zeros(size(length(A_range),length(B_range)));
-           
-            ABBA_norm_table = zeros(size(length(A_range),length(B_range)));
+            continue
+                    
+            %Create corr table for AvsB at each E,K point
+            AB_MC_table = zeros(size(length(A_range),length(B_range)));           
+            AB_MC_norm_table = zeros(size(length(A_range),length(B_range)));
             ABBA_IT_i = 1;
             for A_i = 1:length(A_range)
                 A = A_range(A_i);
-
                 for B_i = 1:length(B_range)
-                    B = B_range(B_i);
-                    
+                    B = B_range(B_i);          
+                        
                     draw_scan_window = fass([1:size(draw_box,1)]+K_off,...
                                             [1:size(draw_box,2)]+E_off);
                     draw_scan_window_norm = window_processor(draw_scan_window);
                     
-                    ABBA_norm_table(A_i,B_i) = sum(dot(draw_scan_window_norm,ABBA_ITs(:,:,ABBA_IT_i)));
+                    AB_MC_norm_table(A_i,B_i) = sum(dot(draw_scan_window_norm, ABBA_ITs(:,:,ABBA_IT_i)));
                     ABBA_IT_i = ABBA_IT_i+1;
                 end
             end 
-            
-            [ABBAn_it_i,BAABn_it_i] = find(ABBA_norm_table==max(ABBA_norm_table(:)),1);
-            ABBAn_it = A_range(ABBAn_it_i);
-            BAABn_it = B_range(BAABn_it_i);
+            %Choose max corr A,B at the E,K point, store in table
+            [A_it_i,B_it_i] = find(AB_MC_norm_table==max(AB_MC_norm_table(:)),1);
+            A_it = A_range(A_it_i);
+            B_it = B_range(B_it_i);
 
-            EK_ABBAn_table(K_off_i,E_off_i) = max(ABBA_norm_table(:));
-            EK_ABBAn_A_table(K_off_i,E_off_i) = ABBAn_it;
-            EK_ABBAn_B_table(K_off_i,E_off_i) = BAABn_it;      
-
+            EK_ABBAn_table(K_off_i,E_off_i) = max(AB_MC_norm_table(:));
+            EK_ABBAn_A_table(K_off_i,E_off_i) = A_it;
+            EK_ABBAn_B_table(K_off_i,E_off_i) = B_it;      
         end    
     end
-    %Find E,k with max corr value, then ID which A,B values were used there
-    [K_off_ABBAn_it_i, E_off_ABBAn_it_i] = find(EK_ABBAn_table==max(EK_ABBAn_table(:)));
-    K_off_ABBAn_it = K_off_range(K_off_ABBAn_it_i);
-    E_off_ABBAn_it = E_off_range(E_off_ABBAn_it_i);
-    ABBAn_it_it = EK_ABBAn_A_table(K_off_ABBAn_it_i,E_off_ABBAn_it_i);
-    BAABn_it_it = EK_ABBAn_B_table(K_off_ABBAn_it_i,E_off_ABBAn_it_i);
-    MC_ABBAn_it = EK_ABBAn_table(K_off_ABBAn_it_i,E_off_ABBAn_it_i);
     
-    EK_ABBAnn_table = (EK_ABBAn_table-min(EK_ABBAn_table(:)))./(max(EK_ABBAn_table(:))-min(EK_ABBAn_table(:)));
+    %Find E,k with max corr value, then ID which A,B values were used there
+    [K_off_it_i, E_off_it_i] = find(EK_AB_MC_table==max(EK_AB_MC_table(:)));
+    K_off_it = K_off_range(K_off_it_i);
+    E_off_it = E_off_range(E_off_it_i);       
+   
+    A_it_it = EK_AB_A_table(K_off_it_i,E_off_it_i);
+    B_it_it = EK_AB_B_table(K_off_it_i,E_off_it_i);
+    MC_it = EK_AB_MC_table(K_off_it_i,E_off_it_i);
+    
+    EK_ABBAnn_table = (EK_AB_MC_table-min(EK_AB_MC_table(:)))./(max(EK_AB_MC_table(:))-min(EK_AB_MC_table(:)));
     [max_a,max_b] = find(EK_ABBAnn_table>=MC_TH);
     corr_spread = length(max_a);
    
-    ABBA_IT_i = find(A_range == ABBAn_it_it);
-    BAAB_IT_i = find(B_range == BAABn_it_it);
+    %Draw the chosen A,B curves and the chosen fass window
+    ABBA_IT_i = find(A_range == A_it_it);
+    BAAB_IT_i = find(B_range == B_it_it);
     IT_IT = ABBA_ITs(:,:,(ABBA_IT_i-1)*length(B_range)+BAAB_IT_i);
-    %{
-    krillin_yp = A*(draw_x0) + B*((draw_x0).^2) + E_0;
-    krillin_yn = -A*(draw_x0) + B*((draw_x0).^2) + E_0;
+    
+    fass_window_it = fass([1:size(draw_box,1)]+K_off_it,...
+                            [1:size(draw_box,2)]+E_off_it);
+    fass_window_norm_it = window_processor(fass_window_it); 
+    
+    
+    krillin_yp = A_it_it*(draw_x0) + B_it_it*((draw_x0).^2) + E_0;
+    krillin_yn = -A_it_it*(draw_x0) + B_it_it*((draw_x0).^2) + E_0;
 
     krillin_itp = horzcat(krillin_yp,draw_x0+K_0);
     krillin_itn = horzcat(krillin_yn,draw_x0+K_0);
 
-    krillin_itp_curt = krillin_itp(max(1,round(-A/(2*B))+K_0):end,:);
-    krillin_itn_curt = krillin_itn(1:min(length(draw_x0),round(K_0+A/(2*B))),:);
+    krillin_itp_curt = krillin_itp(max(1,round(-A_it_it/(2*B_it_it))+K_0):end,:);
+    krillin_itn_curt = krillin_itn(1:min(length(draw_x0),round(K_0+A_it_it/(2*B_it_it))),:);
 
     krillin_itp_it = reshape(krillin_itp_curt',1,[]);
     krillin_itn_it = reshape(krillin_itn_curt',1,[]);
 
-
     krillin_ITP = insertShape(draw_box, 'Line', krillin_itp_it);
-    %{
-    if nnz(ITP(:,1))==0   %Only consider A,B values that give lines that extend across draw_box
-        %ABBA_norm_table(A_i,B_i) = NaN;
-        ABBA_IT_i = ABBA_IT_i + 1;
-        continue
-        end
-    %}
     krillin_ITN = insertShape(draw_box, 'Line', krillin_itn_it);
     krillin_ITP = krillin_ITP(:,:,1);
     krillin_ITN = krillin_ITN(:,:,1);
     
-    krillin = krillin_ITP + krillin_ITN;
+    krillin = krillin_ITP + krillin_ITN; 
+    krillin = imgaussfilt(krillin, krillin_sigma); %to not penalize intensity from a good surface band that's slightly broad
     krillin(krillin~=0)=1;
     krillin = abs(1-krillin);
 
@@ -317,15 +326,11 @@ for i = scan_is
     krillin(gohan.PixelIdxList{1})=0;
     krillin(gohan.PixelIdxList{2})=0;
     krillin(gohan.PixelIdxList{3})=0;
-    %}
-    draw_scan_window_it = fass([1:size(draw_box,1)]+K_off_ABBAn_it,...
-                            [1:size(draw_box,2)]+E_off_ABBAn_it);
-    draw_scan_window_norm_it = window_processor(draw_scan_window_it); 
     
-    %piccolo = sum(dot(krillin,draw_scan_window_it));
+    piccolo = sum(dot(krillin,fass_window_it));
     
-    sumbot = sum(draw_scan_window_norm_it(1:K_0,1:E_0+10));
-    sumtop = sum(draw_scan_window_norm_it(K_0+1:end,1:E_0+10));
+    sumbot = sum(fass_window_norm_it(1:K_0,1:E_0+10));
+    sumtop = sum(fass_window_norm_it(K_0+1:end,1:E_0+10));
     
     sumtoptrash = find(sumtop==0);
     trashin = 0;
@@ -336,42 +341,59 @@ for i = scan_is
     end
     mean_rats = nanmean(sumbot./sumtop);
     
+    %Make the AvsB scan at the chosen E,k point
+    ABatDP = zeros(length(A_range), length(B_range));
+    ABatDP_i = 1;
+    for aa_i = 1:length(A_range)
+        aa = A_range(aa_i);
+        for bb = 1:length(B_range)
+            bb = B_range(bb_i);
+            ABatDP(aa_i,bb_i) = sum(dot(draw_window_norm_it,ABBA_ITs(:,:,ABatDP_i)));
+            ABatDP_i = ABatDP_i+1;
+        end
+    end
     
-    draw_Es_907(i) = (E_off_ABBAn_it + E_0) * bin_E + round(bin_E/2);
-    draw_ks_907(i) = (K_off_ABBAn_it + K_0 + fass_k_off) * bin_k + round(bin_k/2);
-    draw_As_907(i) = ABBAn_it_it;
-    draw_Bs_907(i) = BAABn_it_it;
-    draw_MCs_908(i) = MC_ABBAn_it;
-    draw_MCSs_908(i) = corr_spread;
+            
     
-    draw_rats_908(i) = abs(1-mean_rats);
-    piccolos(i) = piccolo;
+    draw_Es_915d(i) = (E_off_it + E_0) * bin_E + round(bin_E/2);
+    draw_ks_915d(i) = (K_off_it + K_0 + fass_k_off) * bin_k + round(bin_k/2);
+    draw_As_915d(i) = A_it_it;
+    draw_Bs_915d(i) = B_it_it;
+    draw_MCs_915d(i) = MC_it;
+    draw_MCSs_915d(i) = corr_spread;
+    
+    draw_rats_915d(i) = abs(1-mean_rats);
+    piccolos_915d(i) = piccolo;
       
     if wannasee == 1
         draw_pic_it = zeros(size(fass));
-        draw_pic_it([1:size(draw_box,1)] + K_off_ABBAn_it,...
-                 [1:size(draw_box,2)] + E_off_ABBAn_it ) = IT_IT;
+        draw_pic_it([1:size(draw_box,1)] + K_off_it,...
+                 [1:size(draw_box,2)] + E_off_it ) = IT_IT;
              
-        K_conf_range = K_off_ABBAn_it + K_conff_range;
-        E_conf_range = E_off_ABBAn_it + E_conff_range;
-        find_multi_ks_table = zeros(length(K_conf_range),length(E_conf_range));
+        K_conf_range = K_off_it + K_conff_range;
+        E_conf_range = E_off_it + E_conff_range;
+        smear_table = zeros(length(K_conf_range),length(E_conf_range));
         for E_conf_i = 1:length(E_conf_range)
             E_conf = E_conf_range(E_conf_i);
             for K_conf_i = 1:length(K_conf_range)
                 K_conf = K_conf_range(K_conf_i);
                 
+                if (1+K_conf<=0) || (size(draw_box,1)+K_conf>=size(fass,1)) || (1+E_conf<=0) || (size(draw_box,2)+E_conf>=size(fass,2));
+                    smear_table(K_conf_i,E_conf_i) = 0;
+                    continue
+                end
                 drawww_scan_window = fass([1:size(draw_box,1)]+K_conf,...
                                     [1:size(draw_box,2)]+E_conf);
                 drawww_scan_window_norm = window_processor(drawww_scan_window);
                 
-                ABBA_IT_i = find(A_range == ABBAn_it_it);
-                BAAB_IT_i = find(B_range == BAABn_it_it);
-                find_multi_ks_table(K_conf_i,E_conf_i) = sum(dot(drawww_scan_window_norm,ABBA_ITs(:,:,(ABBA_IT_i-1)*length(B_range)+BAAB_IT_i)));
+                %ABBA_IT_i = find(A_range == ABBAn_it_it);
+                %BAAB_IT_i = find(B_range == BAABn_it_it);
+                smear_table(K_conf_i,E_conf_i) = sum(dot(drawww_scan_window_norm,ABBA_ITs(:,:,(ABBA_IT_i-1)*length(B_range)+BAAB_IT_i)));
             end
         end
         
-        gray_multi_ks_table = mat2gray(find_multi_ks_table);
-        ASDF = length(find(gray_multi_ks_table >= multi_TH));
+        gray_smear_table = mat2gray(smear_table);
+        the_smear = length(find(gray_smear_table >= multi_TH));
         
         
         
@@ -379,8 +401,8 @@ for i = scan_is
         figure,
         
         ax5 = subplot(2,4,2);
-        draw_scan_window_ita = rot90(draw_scan_window_it,-1);
-        imagesc(draw_scan_window_ita), axis xy
+        draw_scan_window_norm_ita = rot90(fass_window_norm_it,-1);
+        imagesc(draw_scan_window_norm_ita), axis xy
         colormap(ax5, jet)
         title('Best Window','FontSize',8)
         
@@ -392,7 +414,9 @@ for i = scan_is
         ax2 = subplot(2,4,5);
         rough_scan_tablea = rot90(rough_scan_table,-1);
         %imagesc(rough_scan_tablea), axis xy
-        imagesc(EK_ABBAn_table), axis xy
+        imagesc(AB_MC_norm_table), axis xy
+        xlabel('square (B) term')
+        ylabel('linear (A) term')
         colormap(ax2, jet)
         %title('Rough scan','FontSize',8)
         title('A vs B at DP','FontSize',8)
@@ -402,19 +426,19 @@ for i = scan_is
         FixedWidth = get(0,'FixedWidthFontName');
         %text(0.2,0.5,{['A (eVA) :  ',num2str(A_it_it*bin_E/bin_k*.8107)];['B (eVA) :  ',num2str(B_it_it*bin_E/bin_k*.8107)];['MC:  ',num2str(MC_it)];...
         text(0,0.5,{...
-            ['A(bpix):  ',num2str(ABBAn_it_it)];...
-            ['B(bpix):  ',num2str(BAABn_it_it)];...
-            ['MC(arb):  ',num2str(MC_ABBAn_it)];...
+            ['A(bpix):  ',num2str(A_it_it)];...
+            ['B(bpix):  ',num2str(B_it_it)];...
+            ['MC(arb):  ',num2str(MC_it)];...
             ['     '];...
-            ['E(bpix):  ',num2str(E_off_ABBAn_it+E_0)];...
-            ['K(bpix):  ',num2str(K_off_ABBAn_it+K_0)]} ,'FontName',FixedWidth,'FontSize',8);
+            ['E(bpix):  ',num2str(E_off_it+E_0)];...
+            ['K(bpix):  ',num2str(K_off_it+K_0)]} ,'FontName',FixedWidth,'FontSize',8);
         axis off
 
         ax3 = subplot(2,4,6); 
-        gray_multi_ks_tablea = rot90(gray_multi_ks_table,-1);
-        imagesc(gray_multi_ks_tablea), axis xy
+        gray_smear_tablea = rot90(gray_smear_table,-1);
+        imagesc(gray_smear_tablea), axis xy
         colormap(ax3, jet)
-        title({['Ref Scan'];['Pts > ',num2str(multi_TH),': ',num2str(ASDF)]},'FontSize',8)
+        title({['Ref Scan'];['Pts > ',num2str(multi_TH),': ',num2str(the_smear)]},'FontSize',8)
         %yticks([1,length(K_off_range)])
         %yticklabels({num2str(K_off_range(1)+K_0),num2str(K_off_range(end)+K_0)})
         %ylabel('DP K (binned pixels, fass frame)','FontSize',8)
@@ -440,7 +464,7 @@ for i = scan_is
         %ylabel('A term (pixel units)','FontSize',8)
 
         ax6 = subplot(2,4,[3,4,7,8]);
-        E = mat2gray(fass(16:end-15,:));
+        E = mat2gray(norman(fass(16:end-15,:),0,30));
         Ea = rot90(E,-1);
         I = mat2gray(draw_pic_it(16:end-15,:));
         Ia = rot90(I,-1);
@@ -451,7 +475,7 @@ for i = scan_is
         hold off;
         %colormap(ax6, winter)
         
-        suptitle({['Scan i=',num2str(i)];['Ratio of Sums bot/top = ',num2str(draw_rats_908(i))]})
+        suptitle({['Scan i=',num2str(i)]})
         pause(.01)
     end
 end
