@@ -1,6 +1,6 @@
-goku = zeros(size(draw_scan_window));
+%goku = zeros(size(draw_scan_window));
 %figure, imagesc(goku), axis xy
-draw_box = zeros(size(fass));
+%draw_box = zeros(size(fass));
 
 LWP = 1;
 LWN = 1;
@@ -38,11 +38,11 @@ h = imshow(greenlol);  axis xy
 set(h,'AlphaData',Ia);
 hold off;
 
-
+%{
 K0 = round(size(draw_box,1)/2);
 K_0s     = [K0, K0+20,K0+21,K0+22];
 I_factors = [2,  1, 1, 1];%, 2,    1.5,    .5,    2,    2,     1,     1, 1];
-%{
+
 krillins = zeros(size(draw_box));
 for K_0_i = 1:length(K_0s)
     K_0 = K_0s(K_0_i);

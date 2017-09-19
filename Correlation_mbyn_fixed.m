@@ -1,14 +1,14 @@
 
 
-table_title = 'scan 170915a, Es vs MCSs';
-B_map = reshape(draw_Es_915d,31,31);      %Vertical axis 
-A_map = reshape(draw_ks_915d,31,31);%eshape(norman(draw_rats_908,0,5),31,31);%reshape(line_ks_829,31,31); %reshape(ABEK_ks,31,31);%DPI_map;   %Horizontal axis
-dirac_Es = draw_Es_915d;   %input Energies vector (cone pixels)
-dirac_ks = draw_ks_915d;   %input mtm vector (cone pixels)
+table_title = 'ABEK scan 170916, Es vs ks';
+B_map = reshape(ABEK_Es,31,31);      %Vertical axis 
+A_map = reshape(ABEK_ks,31,31);%eshape(norman(draw_rats_908,0,5),31,31);%reshape(line_ks_829,31,31); %reshape(ABEK_ks,31,31);%DPI_map;   %Horizontal axis
+dirac_Es = ABEK_Es;   %input Energies vector (cone pixels)
+dirac_ks = ABEK_ks;   %input mtm vector (cone pixels)
 
-B_interval_list = [-.05,0; 0,0.05; 0.05, .1; .1,0.15;0.15,.2; .2,.25]+0.4;
+B_interval_list = [-.05,0; 0,0.05; 0.05, .1; .1,0.15;0.15,.2; .2,.25; .25,.3]+0.1;
 % A_interval_list=[0,1; .3,.7; .4,.65];%; .3,.7; .2,.5; .5,.8];%[0,1; 0,0.3; 0.6,1; .2,.8];% 0,0.2; .1,.9; .3,.7]; %Setting the intervals 
-A_interval_list = [.4,.6];%[0,1; 0,0.3; 0.6,1; .2,.8];% 0,0.8; .2,.8; 0,.7]; %[0,1; .3,1; .4,1; .5,1];%[0,1; .1,.9; .3,.7];%[0.1,1; 0.3,1; 0.6,1]; 
+A_interval_list = [.3,.7];%[0,1; 0,0.3; 0.6,1; .2,.8];% 0,0.8; .2,.8; 0,.7]; %[0,1; .3,1; .4,1; .5,1];%[0,1; .1,.9; .3,.7];%[0.1,1; 0.3,1; 0.6,1]; 
 
 
 pix2eV = (1.599/(2*496));
