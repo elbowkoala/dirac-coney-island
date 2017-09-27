@@ -1,15 +1,13 @@
+table_title = 'ABEK scan 170922, Es vs ks';
+B_map = E_map;      %Vertical axis 
+A_map = reshape(allfiltered,31,31);%eshape(norman(draw_rats_908,0,5),31,31);%reshape(line_ks_829,31,31); %reshape(ABEK_ks,31,31);%DPI_map;   %Horizontal axis
+dirac_Es = rfc_small_Es;   %input Energies vector (cone pixels)
+dirac_ks = rfc_small_ks;   %input mtm vector (cone pixels)
 
-
-table_title = 'ABEK scan 170916, Es vs ks';
-B_map = reshape(ABEK_Es,31,31);      %Vertical axis 
-A_map = reshape(ABEK_ks,31,31);%eshape(norman(draw_rats_908,0,5),31,31);%reshape(line_ks_829,31,31); %reshape(ABEK_ks,31,31);%DPI_map;   %Horizontal axis
-dirac_Es = ABEK_Es;   %input Energies vector (cone pixels)
-dirac_ks = ABEK_ks;   %input mtm vector (cone pixels)
-
-B_interval_list = [-.05,0; 0,0.05; 0.05, .1; .1,0.15;0.15,.2; .2,.25; .25,.3]+0.1;
+B_interval_list = [0,.1; .1,.2; .3,.4; .4,.5; .5,.6; .6,.7; .7,.8; .8,.9; .9,1];
+%[.4,.425; .425,.45; .45,.475; .475,.5; .5,.525; .525,.55];% [0,0.05; 0.05, .1; .1,0.15;0.15,.2; .2,.25; .25,.3]+0.3;
 % A_interval_list=[0,1; .3,.7; .4,.65];%; .3,.7; .2,.5; .5,.8];%[0,1; 0,0.3; 0.6,1; .2,.8];% 0,0.2; .1,.9; .3,.7]; %Setting the intervals 
-A_interval_list = [.3,.7];%[0,1; 0,0.3; 0.6,1; .2,.8];% 0,0.8; .2,.8; 0,.7]; %[0,1; .3,1; .4,1; .5,1];%[0,1; .1,.9; .3,.7];%[0.1,1; 0.3,1; 0.6,1]; 
-
+A_interval_list = [.5,1];%[0,1; 0,0.3; 0.6,1; .2,.8];% 0,0.8; .2,.8; 0,.7]; %[0,1; .3,1; .4,1; .5,1];%[0,1; .1,.9; .3,.7];%[0.1,1; 0.3,1; 0.6,1]; 
 
 pix2eV = (1.599/(2*496));
 pix2invA = 0.512*0.04631/180*3.1415*14/30*sqrt(110-4);
@@ -17,7 +15,6 @@ pix2invA = 0.512*0.04631/180*3.1415*14/30*sqrt(110-4);
 
 [E_interp,K_interp] = meshgrid(-149.5:.5:350, -80:.5:80); %meshgrid(-149.5:.5:280, -80:.5:80); %meshgrid(-199.5:0.5:250,-80:0.5:80);
 full_arpes = zeros(size(E_interp));
-
 
 [region_list]=Correlation_list_indep_ranges(A_map,B_map,A_interval_list,B_interval_list);
 regional_arpes=zeros([size(E_interp),size(region_list,1)]);
@@ -33,10 +30,8 @@ for iii=1:size(region_list,1)
          nnn = nnn+1;
          cone = cones(:,:,jjj);
          [E_coor, K_coor] = meshgrid(1:size(cone,2),1:size(cone,1));
-         E_coor = E_coor - dirac_Es(jjj);  %%%(bin_E=2)
-         K_coor = K_coor - dirac_ks(jjj);  %%%(bin_k=1)
-         %E_coor_ave(:,:,iii) = E_coor_ave(:,:,iii) + E_coor;
-         %K_coor_ave(:,:,iii) = K_coor_ave(:,:,iii) + K_coor;
+         E_coor = E_coor - dirac_Es(jjj);  
+         K_coor = K_coor - dirac_ks(jjj);  
          interp_arpes = interp2(E_coor, K_coor, cone, E_interp, K_interp);
          regional_arpes(:,:,iii) = regional_arpes(:,:,iii) + interp_arpes;
          
@@ -82,7 +77,8 @@ for iii=1:size(region_list,1)
     Eaxis_eV_0fixed = Eaxis_eV - abs(mean_DPE_eV(iii));
     Kaxis_invA = Kaxis * pix2invA;
     %imagesc(Kaxis_invA, flip(Eaxis_eV_0fixed), rot90(norman(region_arpes_binned(1:103,:),0,5))), axis xy
-    imagesc(Kaxis_invA, flip(Eaxis_eV_0fixed), rot90(region_arpes_symmetrized)), axis xy
+    imagesc(Kaxis_invA, flip(Eaxis_eV_0fixed), rot90(norman(region_arpes_symmetrized,0,5))), axis xy
+    colormap hot
     title(['nnn=',num2str(nnn_scans(iii))])
     %yticks([0,-(mean_DPE_eV(iii)/pix2eV)])
     %yticklabels({num2str(mean_DPE_eV(iii)),'0'})

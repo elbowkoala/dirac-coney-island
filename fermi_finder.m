@@ -1,25 +1,26 @@
-%max_L = zeros(1,num_scans);
-max_R = zeros(1,num_scans);
-%min_C = zeros(1,num_scans);
-fermi_= zeros(1,num_scans);
-%bbbb = zeros(1,num_scans);
-%cond_band_beg = zeros(1,num_scans);
 
-for i = 1:num_scans;
 
-    duhh = sum(imgaussfilt(cones(:,:,i),5),1);
-    duhhh = smooth(duhh,20,'rlowess');
+%fermi_= zeros(1,num_scans);
+
+
+for i=1:num_scans
+
+    duhh = sum(imgaussfilt(cones(:,:,i),6),1);
+    duhhh = smooth(duhh,3,'rlowess');
     duhhh = duhhh./max(duhhh);
-
+    duh_bkgd =  mean(duhhh(700:780));
     if rem(i,100)==0;
         disp(i)
     end
-    %max_L(i) = find(duhh==max(duhh(50:150)));
-    %max_R(i) = find(duhhh==max(duhhh(600:700)),1,'last');
-    fermi_(i) = find(duhhh(600:700)>=0.5,1,'last') + 599;
-    %fermi(i) = find(duhh(max_R(i):end)<=(duhh(max_R(i))/2),1) + max_R(i) -1;
-    %min_C(i) = find(duhh==min(duhh(max_L(i):max_R(i))));
-    %cond_band_beg(i) = find(duhh(min_C(i):max_R(i))>duhh(max_L(i)),1,'first') + min_C(i) - 1;
+    fermi_(i) = find(duhhh(550:700)>=0.5+duh_bkgd/2,1,'last') + 549;
+    %{
+    figure, subplot(2,1,1), plot(duhhh), hold on;title(num2str(i))
+    plot(fermi_(i),duhhh(fermi_(i)),'r*'), hold off
+    subplot(2,1,2), imagesc(imgaussfilt(cones(:,:,i),5)), axis xy, hold on;
+    plot([fermi_(i),fermi_(i)],[1,300],'r'), hold off;
+    title(num2str(fermi_(i)))
+    pause(.001)
+    %}
 end
 
 figure, 

@@ -1,6 +1,6 @@
 tic;
 %%%%%PARAMS%%%%%%%%%%%%%%%%
-scan_is = 34;
+scan_is = [round(961*rand), round(961*rand), round(961*rand), round(961*rand)];
 wannasee = 1;
 
 bin_E = 5;
@@ -9,27 +9,25 @@ fass_sigma = 2;
 
 LineWidth = 1;
 draw_sigma = 2;
-krillin_sigma = 1;
+krillin_sigma = 0.5;
 
-draw_box = zeros(61,71);
-E_0 = 30;%20;
+draw_box = zeros(61,61);
+E_0 = 20;%20;
 E_B1 =5;
 E_B2 = size(draw_box,2)-10;
 K_0 = round(size(draw_box,1)/2);
 draw_x = (1:size(draw_box,1))';
 draw_x0 = draw_x - K_0;
 
-A_range = [1.5:.1:2.5];%[0.5:.5:3.0];%[.6:.2:2];%[1.8];%[1,2,3];
+A_range = [1.5:.05:2.5];%[0.5:.5:3.0];%[.6:.2:2];%[1.8];%[1,2,3];
 B_range = 0:.001:.01;%[0:.002:.01];%[0,.05,.1];
-E_rough_range = round(55:2:95) - E_0;
-K_rough_range = 65:2:105 - K_0;%round(101/2 - round(size(draw_box,1)/2)) + (-20:2:20);
-E_ref_range = -10:1:10;
+E_rough_range = (40:100) - E_0;
+K_rough_range = (80:100) - K_0;%round(101/2 - round(size(draw_box,1)/2)) + (-20:2:20);
+E_ref_range = -5:1:5;
 K_ref_range = -5:1:5;
 E_conff_range = -10:1:10;
 K_conff_range = -10:1:10;
-
-K_off_range = 40:55;
-E_off_range = 30:60;   
+ 
     
 
 rough_scan_A = 1.9; 
@@ -56,6 +54,7 @@ ABEK_MCs = zeros(1,num_scans);
 ABEK_MCSs = zeros(1,num_scans);
 combadges = zeros(1,num_scans);
 TBDs = zeros(1,num_scans);
+ABjudge = zeros(1,num_scans);
 %}
 ABBA_ITs = zeros(size(draw_box,1),size(draw_box,2),length(A_range)*length(B_range));
 
@@ -120,7 +119,7 @@ for i = scan_is
     conebf = imgaussfilt(coneb,fass_sigma); %[fass,fass_k_off] = kLOSfinder5(cone,bin_E,bin_k);
     %fass = imgaussfilt(fass,fass_sigma);
     fass = conebf;
-    %{
+    
     %%Scan first round roughly to find where to scan more closely, tbd is diff in
     %%summed intensities in top half of fass window vs bottom
     rough_scan_table = zeros(size(length(K_rough_range),length(E_rough_range)));
@@ -148,15 +147,23 @@ for i = scan_is
 
         end
     end
+    rough_scan_table = imgaussfilt(rough_scan_table,1);
+    RST_weights = 1 - mat2gray(rough_scan_table_tbd);
+    rough_scan_table_weighted = imgaussfilt((rough_scan_table .* RST_weights),1);
+    [K_scan_center_i,E_scan_center_i] = find(rough_scan_table_weighted==max(rough_scan_table_weighted(:)));
     
-    [K_scan_center_i,E_scan_center_i] = find(rough_scan_table==max(rough_scan_table(:)));
-    %}  
+    %figure, 
+    %subplot(1,3,1), imagesc(rough_scan_table), axis xy, 
+    %subplot(1,3,2), imagesc(rough_scan_table_tbd), axis xy
+    %subplot(1,3,3), imagesc(rough_scan_table_weighted), axis xy, hold on;
+    %plot(E_scan_center_i,K_scan_center_i,'r+'), hold off;
+
 
     %%%%%%%%%%Now the actual ABEK scanning%%%%%%%%%
     
     %Setting the refined-E,K scan range based off rough scan results
-    %K_off_range = K_rough_range(K_scan_center_i) + K_ref_range;
-    %E_off_range = E_rough_range(E_scan_center_i) + E_ref_range;   
+    K_off_range = K_rough_range(K_scan_center_i) + K_ref_range;
+    E_off_range = E_rough_range(E_scan_center_i) + E_ref_range;   
     
     
     EK_AB_MC_table = zeros(size(length(K_off_range),length(E_off_range)));
@@ -256,7 +263,9 @@ for i = scan_is
     combadge(starfleet.PixelIdxList{2})=0;
     combadge(starfleet.PixelIdxList{3})=0;
     
-    incombadge = sum(dot(combadge,fass_window_norm_it)); 
+    combadge(:,E_0+25:end) = zeros(size(combadge,1), size(combadge,2) - E_0 - 24);
+    
+    incombadge = sum(dot(combadge,fass_window_norm_it))/nnz(combadge) * 1000; 
     
     %Difference in sum of intensities between k>0 half and k<0 half for
     %each E column of chosen fass window, averaged
@@ -270,10 +279,11 @@ for i = scan_is
     ABatDP_i = 1;
     for aa_i = 1:length(A_range)
         for bb_i = 1:length(B_range)
-            ABatDP(aa_i,bb_i) = sum(dot(fass_window_norm_it,ABBA_ITs(:,:,ABatDP_i)));
+            ABatDP(aa_i,bb_i) = sum(dot(fass_window_it,ABBA_ITs(:,:,ABatDP_i)));
             ABatDP_i = ABatDP_i+1;
         end
     end
+    ABatDP_gray = (ABatDP - min(ABatDP(:))) / (max(ABatDP(:)) - min(ABatDP(:)));
     
             
     
@@ -285,36 +295,38 @@ for i = scan_is
     ABEK_MCs(i) = MC_it;
     ABEK_MCSs(i) = corr_spread;
     TBDs(i) = sumIdiff;
-    
     combadges(i) = incombadge;
-      
-    if wannasee == 1
-        draw_pic_it = zeros(size(fass));
-        draw_pic_it([1:size(draw_box,1)] + K_off_it, [1:size(draw_box,2)] + E_off_it ) = IT_IT;
-             
-        K_conf_range = K_off_it + K_conff_range;
-        E_conf_range = E_off_it + E_conff_range;
-        smear_table = zeros(length(K_conf_range),length(E_conf_range));
-        for E_conf_i = 1:length(E_conf_range)
-            E_conf = E_conf_range(E_conf_i);
-            for K_conf_i = 1:length(K_conf_range)
-                K_conf = K_conf_range(K_conf_i);
-                
-                if (1+K_conf<=0) || (size(draw_box,1)+K_conf>=size(fass,1)) || (1+E_conf<=0) || (size(draw_box,2)+E_conf>=size(fass,2));
-                    smear_table(K_conf_i,E_conf_i) = 0;
-                    continue
-                end
-                drawww_scan_window = fass([1:size(draw_box,1)]+K_conf, [1:size(draw_box,2)]+E_conf);
-                drawww_scan_window_norm = window_processor(drawww_scan_window);
-                
-                smear_table(K_conf_i,E_conf_i) = sum(dot(drawww_scan_window_norm,ABBA_ITs(:,:,(A_IT_i-1)*length(B_range)+B_IT_i)));
+    
+    ABjudge(i) = sum(dot(ABatDP_gray, goodAB)) / (size(goodAB,1)*size(goodAB,2));  
+    
+    draw_pic_it = zeros(size(fass));
+    draw_pic_it([1:size(draw_box,1)] + K_off_it, [1:size(draw_box,2)] + E_off_it ) = IT_IT;
+
+    K_conf_range = K_off_it + K_conff_range;
+    E_conf_range = E_off_it + E_conff_range;
+    smear_table = zeros(length(K_conf_range),length(E_conf_range));
+    for E_conf_i = 1:length(E_conf_range)
+        E_conf = E_conf_range(E_conf_i);
+        for K_conf_i = 1:length(K_conf_range)
+            K_conf = K_conf_range(K_conf_i);
+
+            if (1+K_conf<=0) || (size(draw_box,1)+K_conf>=size(fass,1)) || (1+E_conf<=0) || (size(draw_box,2)+E_conf>=size(fass,2));
+                smear_table(K_conf_i,E_conf_i) = 0;
+                continue
             end
+            drawww_scan_window = fass([1:size(draw_box,1)]+K_conf, [1:size(draw_box,2)]+E_conf);
+            drawww_scan_window_norm = window_processor(drawww_scan_window);
+
+            smear_table(K_conf_i,E_conf_i) = sum(dot(drawww_scan_window_norm,ABBA_ITs(:,:,(A_IT_i-1)*length(B_range)+B_IT_i)));
         end
-        
-        gray_smear_table = mat2gray(smear_table);
-        the_smear = length(find(gray_smear_table >= multi_TH))/nnz(gray_smear_table);
-               
+    end
+
+    gray_smear_table = mat2gray(smear_table);
+    the_smear = length(find(gray_smear_table >= multi_TH))/nnz(gray_smear_table);
+
+    if wannasee == 1    
         %%%%%%%Draw Figure%%%%%%%%%%%
+        
         figure,
         
         ax5 = subplot(2,4,2);
@@ -346,7 +358,7 @@ for i = scan_is
             ['E(bpix):  ',num2str(E_off_it+E_0)];...
             ['K(bpix):  ',num2str(K_off_it+K_0)];...
             ['  '];...
-            ['TBD:      ',num2str(TBDs(i))];...
+            ['TBD: ',num2str(TBDs(i))];...
             ['combadge: ',num2str(combadges(i))]}, 'FontName',FixedWidth,'FontSize',8);
         axis off
 
@@ -389,6 +401,7 @@ for i = scan_is
         h = imshow(greenlol);  axis xy
         set(h,'AlphaData',Ia);
         hold off;
+        title(num2str(ABjudge(i)));
         %colormap(ax6, winter)
         
         suptitle({['Scan i=',num2str(i)]})
