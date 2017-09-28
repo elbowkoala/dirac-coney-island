@@ -38,9 +38,9 @@ disp('Template step completed '), toc
 
 scan_maxes_big = zeros(1,num_scans);
 DPI_big = zeros(1,num_scans);
-%figure,
+figure,
 NNN=0;
-for i = 1:num_scans;% [1,round(961*rand),round(961*rand),round(961*rand)]%1:1:num_scans;  
+for i = 444% [1,round(961*rand),round(961*rand),round(961*rand)]%1:1:num_scans;  
    % NNN=NNN+1;
     if rem(i,100) == 0
         disp(['Now on scan ',num2str(i)])
@@ -68,13 +68,10 @@ for i = 1:num_scans;% [1,round(961*rand),round(961*rand),round(961*rand)]%1:1:nu
     scan_Eaxis = x_peak - 30 : x_peak + 30;
     scan_Kaxis = y_peak - 50: y_peak + 50;
     
-    DPI_big(i) = sum(sum(scone_bg(y_offset:y_offset+size(rfc_big_bwg,1),window_big_E_coor+x_offset-20:window_big_E_coor+x_offset+20)));
-    
-    %{
+    DPI_big(i) = sum(scone_bg(y_offset:k_offset+size(rfc_big_bwg,1),x_offset
     subplot(1,2,1), %imagesc(scan_Kaxis,scan_Eaxis,rot90(scan,-1)), axis xy, title(num2str(i)), hold on;
     imagesc(rot90(scan,-1)), axis xy, hold on;
     plot(size(scan,1)-y_peak,x_peak,'b*'), hold off;
-    title(['E=',num2str(rfc_big_Es(i)),' k=',num2str(rfc_big_ks(i))])
     %subplot(1,3,2), imagesc(scone_bg), axis xy, hold on;
     %plot([x_offset+window_big_E_coor-1],[y_offset+window_big_k_coor-1],'r*'), hold on;
     %plot([1,1,size(rfc_big_bwg,2),size(rfc_big_bwg,2),1]+x_offset,[1,size(rfc_big_bwg,1),size(rfc_big_bwg,1),1,1]+y_offset,'r'), hold off;
@@ -82,8 +79,7 @@ for i = 1:num_scans;% [1,round(961*rand),round(961*rand),round(961*rand)]%1:1:nu
     subplot(1,2,2), imagesc(rot90(scone_bg,-1)), axis xy, hold on;
     plot([1,size(rfc_big_bwg,1),size(rfc_big_bwg,1),1,1]+size(scone_bg,1)-size(rfc_big_bwg,1)-y_offset,[1,1,size(rfc_big_bwg,2),size(rfc_big_bwg,2),1]+x_offset,'r'), hold on;
     plot([size(scone_bg,1)-size(rfc_big_bwg,1)-y_offset+size(rfc_big_bwg,1)-window_big_k_coor],[window_big_E_coor+x_offset], 'r*'), hold off;
-    title(['DPI = ',num2str(DPI_big(i))])
-    %}
+    title(['E=',num2str(rfc_big_Es(i)),' k=',num2str(rfc_big_ks(i))])
 end
 disp('Scanning Round 1 completed'), toc
 

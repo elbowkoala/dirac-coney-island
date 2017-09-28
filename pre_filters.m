@@ -1,12 +1,16 @@
+
 pre_filter_vecs = cat(1,[]); 
 
 
-pre_filter_vecs(1,:) = rfc_small_ks;
-%pre_filter_vecs(2,:) = ABEK_ks;
-%pre_filter_vecs(3,:) = ABEK_MCSs;
+pre_filter_vecs(1,:) = [172, 188, scan_spread];
+pre_filter_range(1,:) = [204,276];
+pre_filter_vecs(2,:) = rfc_small_ks;
+pre_filter_range(2,:) = [172,188];
+pre_filter_vecs(3,:) = DPI_big;
+pre_filter_range(2,:)
 %pre_filter_vecs(4,:) = DPIs;
 
-pre_filter_ranges = [170,188];%[0,.0022;  172, 188;  44,63;  1200, 2050];
+pre_filter_ranges = [204,276; 172,188; 215, 434];%[0,.0022;  172, 188;  44,63;  1200, 2050];
 
 allfiltered = ones(1,961);
 figure;
@@ -15,7 +19,6 @@ for NN = 1:size(pre_filter_ranges,1)
     filtered(filtered < pre_filter_ranges(NN,1)) = 0;
     filtered(filtered > pre_filter_ranges(NN,2)) = 0;
     filtered(filtered~=0) = 1;
-    %figure, imagesc(reshape(filtered,31,31)), axis xy
     allfiltered = allfiltered .* filtered;
     
     subplot(size(pre_filter_ranges,1),1,NN)

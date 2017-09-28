@@ -1,0 +1,157 @@
+
+
+pre_filter_vecs = cat(1,[]); 
+
+pre_filter = cat(1,[]);
+pre_filter(1,:) = [204,276, scan_spread];
+pre_filter(2,:) = [172,188, rfc_small_ks];
+pre_filter(3,:) = [168,434, DPI_big];
+
+figure
+allfiltered = reshape(A_map,1,961);
+for NN = 1:size(pre_filter,1)
+    allfiltered(pre_filter(NN,3:end) < pre_filter(NN,1)) = 0;
+    allfiltered(pre_filter(NN,3:end) > pre_filter(NN,2)) = 0;
+    
+    subplot(size(pre_filter,1),2,2*(NN-1)+2)
+    histogram(pre_filter(NN,3:end),40), hold on;
+    plot([pre_filter(NN,1),pre_filter(NN,1)],[0,max(hist(pre_filter(NN,3:end),40))],'r'), hold on;
+    plot([pre_filter(NN,2),pre_filter(NN,2)],[0,max(hist(pre_filter(NN,3:end),40))],'r'), hold off;
+    
+end
+
+filtered_A_map = reshape(allfiltered,31,31);
+subplot(NN,2,[1 3 5]) 
+imagesc(filtered_A_map), axis xy
+ 
+
+
+
+
+%{
+pre_filter3_vec = combadges;
+pre_filter3_range = [.25, .40];
+
+pre_filter4_vec = ABEK_MCSs;
+pre_filter4_range = [44, 63];
+
+filtered1 = pre_filter1_vec;
+filtered1(filtered1< pre_filter1_range(1)) = NaN;
+filtered1(filtered1 > pre_filter1_range(2)) = NaN;
+
+filtered2 = pre_filter2_vec;
+filtered2(filtered2< pre_filter2_range(1)) = NaN;
+filtered2(filtered2 > pre_filter2_range(2)) = NaN;
+
+filtered3 = pre_filter3_vec;
+filtered3(filtered3< pre_filter3_range(1)) = NaN;
+filtered3(filtered3 > pre_filter3_range(2)) = NaN;
+
+allfiltered = filtered1 .* filtered2 .* filtered3;
+
+figure, 
+subplot(1,4,1), imagesc(reshape(filtered1,31,31)), axis xy;
+subplot(1,4,2), imagesc(reshape(filtered2,31,31)), axis xy;
+subplot(1,4,3), imagesc(reshape(filtered3,31,31)), axis xy;
+subplot(1,4,4), imagesc(reshape(allfiltered,31,31)), axis xy
+
+allfiltered_bw = allfiltered;
+allfiltered_bw(isnan(allfiltered_bw)) = 0;
+allfiltered_bw(allfiltered_bw~=0) = 1;
+figure, imagesc(reshape(allfiltered_bw,31,31)), axis xy
+
+figure, 
+subplot(3,1,1)
+hist(pre_filter1_vec,25), hold on;
+plot([pre_filter1_range(1),pre_filter1_range(1)],[0,max(hist(pre_filter1_vec,25))],'r'), hold on;
+plot([pre_filter1_range(2),pre_filter1_range(2)],[0,max(hist(pre_filter1_vec,25))],'r'), hold off;
+
+subplot(3,1,2)
+hist(pre_filter2_vec,25), hold on;
+plot([pre_filter2_range(1),pre_filter2_range(1)],[0,max(hist(pre_filter2_vec,25))],'r'), hold on;
+plot([pre_filter2_range(2),pre_filter2_range(2)],[0,max(hist(pre_filter2_vec,25))],'r'), hold off;
+
+subplot(3,1,3)
+hist(pre_filter3_vec,25), hold on;
+plot([pre_filter3_range(1),pre_filter3_range(1)],[0,max(hist(pre_filter3_vec,25))],'r'), hold on;
+plot([pre_filter3_range(2),pre_filter3_range(2)],[0,max(hist(pre_filter3_vec,25))],'r'), hold off;
+
+
+
+
+
+function filtered_logic_map = pre_filter_out( input_vec, cuton, cutoff )
+
+
+allfiltered = ones(1,961);
+
+filtered = input_vec;
+filtered(filtered < cuton) = 0;
+filtered(filtered > cutoff) = 0;
+filtered(filtered~=0) = 1;
+allfiltered = allfiltered .* filtered;
+
+filtered_logic_map = allfiltered; 
+
+figure,
+histogram(input_vec,25), hold on;
+plot([cuton,cuton],[0,max(hist(input_vec,25))],'r'), hold on;
+plot([cutoff,cutoff],[0,max(hist(input_vec,25))],'r'), hold off;   
+
+end
+
+
+
+%figure, imagesc(reshape(allfiltered,31,31)), axis xy
+
+pre_filter2_vec = ABEK_ks;
+pre_filter2_range = [172,188];
+
+pre_filter3_vec = combadges;
+pre_filter3_range = [.25, .40];
+
+pre_filter4_vec = ABEK_MCSs;
+pre_filter4_range = [44, 63];
+
+filtered1 = pre_filter1_vec;
+filtered1(filtered1< pre_filter1_range(1)) = NaN;
+filtered1(filtered1 > pre_filter1_range(2)) = NaN;
+
+filtered2 = pre_filter2_vec;
+filtered2(filtered2< pre_filter2_range(1)) = NaN;
+filtered2(filtered2 > pre_filter2_range(2)) = NaN;
+
+filtered3 = pre_filter3_vec;
+filtered3(filtered3< pre_filter3_range(1)) = NaN;
+filtered3(filtered3 > pre_filter3_range(2)) = NaN;
+
+allfiltered = filtered1 .* filtered2 .* filtered3;
+
+figure, 
+subplot(1,4,1), imagesc(reshape(filtered1,31,31)), axis xy;
+subplot(1,4,2), imagesc(reshape(filtered2,31,31)), axis xy;
+subplot(1,4,3), imagesc(reshape(filtered3,31,31)), axis xy;
+subplot(1,4,4), imagesc(reshape(allfiltered,31,31)), axis xy
+
+allfiltered_bw = allfiltered;
+allfiltered_bw(isnan(allfiltered_bw)) = 0;
+allfiltered_bw(allfiltered_bw~=0) = 1;
+figure, imagesc(reshape(allfiltered_bw,31,31)), axis xy
+
+figure, 
+subplot(3,1,1)
+hist(pre_filter1_vec,25), hold on;
+plot([pre_filter1_range(1),pre_filter1_range(1)],[0,max(hist(pre_filter1_vec,25))],'r'), hold on;
+plot([pre_filter1_range(2),pre_filter1_range(2)],[0,max(hist(pre_filter1_vec,25))],'r'), hold off;
+
+subplot(3,1,2)
+hist(pre_filter2_vec,25), hold on;
+plot([pre_filter2_range(1),pre_filter2_range(1)],[0,max(hist(pre_filter2_vec,25))],'r'), hold on;
+plot([pre_filter2_range(2),pre_filter2_range(2)],[0,max(hist(pre_filter2_vec,25))],'r'), hold off;
+
+subplot(3,1,3)
+hist(pre_filter3_vec,25), hold on;
+plot([pre_filter3_range(1),pre_filter3_range(1)],[0,max(hist(pre_filter3_vec,25))],'r'), hold on;
+plot([pre_filter3_range(2),pre_filter3_range(2)],[0,max(hist(pre_filter3_vec,25))],'r'), hold off;
+%}
+

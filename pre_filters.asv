@@ -1,12 +1,12 @@
-pre_filter_vecs = zeros(3,961); 
+pre_filter_vecs = cat(1,[]); 
 
 
-pre_filter_vecs(1,:) = TBDs;
-pre_filter_vecs(2,:) = ABEK_ks;
-pre_filter_vecs(3,:) = combadges;
-pre_filter_vecs(4,:) = ABEK_MCSs;
+pre_filter_vecs(1,:) = scan_spread;
+pre_filter_vecs(2,:) = rfc_small_ks;
+%pre_filter_vecs(3,:) = ABEK_MCSs;
+%pre_filter_vecs(4,:) = DPIs;
 
-pre_filter_ranges = [0,.0022;  172, 188;  .25, .40; 44,63];
+pre_filter_ranges = [204,276; 172,178 ];%[0,.0022;  172, 188;  44,63;  1200, 2050];
 
 allfiltered = ones(1,961);
 figure;
@@ -26,7 +26,7 @@ end
 
 
 
-%figure, imagesc(reshape(allfiltered,31,31)), axis xy
+figure, imagesc(reshape(allfiltered,31,31)), axis xy
 %{
 pre_filter2_vec = ABEK_ks;
 pre_filter2_range = [172,188];
