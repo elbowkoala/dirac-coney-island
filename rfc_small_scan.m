@@ -6,7 +6,7 @@ tic;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%% Parameters %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-bin_E = 5;
+bin_E = 3;
 bin_k = 2;
 
 rfc_sigma = 3;
@@ -23,7 +23,7 @@ for i = 1:1:num_scans;
 end
 %}
 rfc_b = Binning_2d(raw_full_cone, bin_E, bin_k);
-rfc_small_window_Kpix = (70:110);
+rfc_small_window_Kpix = (60:120);
 rfc_small_window_Epix = (55:95);
 rfc_small_window = rfc_b(rfc_small_window_Kpix, rfc_small_window_Epix); 
 rfc_small_bwg = mat2gray(rfc_small_window);
@@ -39,9 +39,9 @@ disp('Template step completed '), toc
 %scan_maxes_small = zeros(1,num_scans);
 %DPI_small = zeros(1,num_scans);
 %scan_spread = zeros(1,num_scans);
-%figure,
+figure,
 NNN=0;
-for i =  1:num_scans%[round(961*rand),round(961*rand),round(961*rand),round(961*rand),round(961*rand), round(961*rand)]%1:1:num_scans;  
+for i =  1%[round(961*rand),round(961*rand),round(961*rand),round(961*rand),round(961*rand), round(961*rand)]%1:1:num_scans;  
     NNN=NNN+1;
     if rem(i,100) == 0
         disp(['Now on scan ',num2str(i)])
@@ -79,7 +79,7 @@ for i =  1:num_scans%[round(961*rand),round(961*rand),round(961*rand),round(961*
         continue
     end
     scan_spread(i) = sum(sum(scan_gray(smax_y-20:smax_y+20,smax_x-5:smax_x+5)));
-    %{
+    
     subplot(1,4,1), %imagesc(scan_Kaxis,scan_Eaxis,rot90(scan,-1)), axis xy, title(num2str(i)), hold on;
     imagesc(rot90(scan,-1)), axis xy, hold on;
     plot(size(scan,1)-y_peak,x_peak,'b*'), hold off;
@@ -98,8 +98,8 @@ for i =  1:num_scans%[round(961*rand),round(961*rand),round(961*rand),round(961*
     
     subplot(1,4,4), imagesc(rot90(imgaussfilt(Binning_2d(cones(:,:,i),5,2),2),-1)), axis xy;
     title(['i=',num2str(i)]);
-    pause(5)
-    %}
+    
+    
 end
 disp('Scanning Round 1 completed'), toc
 

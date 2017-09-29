@@ -12,17 +12,17 @@ draw_sigma = 2;
 krillin_sigma = 0.5;
 
 draw_box = zeros(61,61);
-E_0 = 20;%20;
+E_0 = 20;
 E_B1 =5;
 E_B2 = size(draw_box,2)-10;
 K_0 = round(size(draw_box,1)/2);
 draw_x = (1:size(draw_box,1))';
 draw_x0 = draw_x - K_0;
 
-A_range = [1.5:.05:2.5];%[0.5:.5:3.0];%[.6:.2:2];%[1.8];%[1,2,3];
-B_range = 0:.001:.01;%[0:.002:.01];%[0,.05,.1];
+A_range = [1.5:.05:2.5];
+B_range = 0:.001:.01;
 E_rough_range = (40:100) - E_0;
-K_rough_range = (80:100) - K_0;%round(101/2 - round(size(draw_box,1)/2)) + (-20:2:20);
+K_rough_range = (80:100) - K_0;
 E_ref_range = -5:1:5;
 K_ref_range = -5:1:5;
 E_conff_range = -10:1:10;
@@ -35,8 +35,8 @@ if (ismember(rough_scan_A,A_range) == 0) || (ismember(rough_scan_B,B_range) == 0
     return
 end
 
-A_range_eVA = A_range * (bin_E/bin_k) * .8107;
-B_range_eVA = B_range * (bin_E/bin_k) * .8107;
+A_range_eVA = A_range * (bin_E/bin_k) * (pix2eV/pix2invA);
+B_range_eVA = B_range * (bin_E/bin_k) * (pix2eV/pix2invA);
 
 MC_TH = 0.65;
 multi_TH = 0.65;
@@ -55,7 +55,6 @@ TBDs = zeros(1,num_scans);
 ABjudge = zeros(1,num_scans);
 %}
 ABBA_ITs = zeros(size(draw_box,1),size(draw_box,2),length(A_range)*length(B_range));
-
 
 %First draw all the A,B templates%%%
 A_IT_i = 1;
@@ -93,10 +92,10 @@ for A_i = 1:length(A_range)
             continue
         end
         ITN = insertShape(draw_box, 'Line', draw_itn_it, 'LineWidth',LineWidth);
-
+        
         ITP = ITP(:,:,1);
         ITN = ITN(:,:,1);
-
+        
         IT = IT_processor(ITP + ITN, draw_sigma, E_B1,E_0,E_B2);   
         
         ABBA_ITs(:,:,A_IT_i) = IT;
@@ -398,7 +397,7 @@ for i = scan_is
         h = imshow(greenlol);  axis xy
         set(h,'AlphaData',Ia);
         hold off;
-        title(num2str(ABjudge(i)));
+        title(num2str(i));
         %colormap(ax6, winter)
         
         suptitle({['Scan i=',num2str(i)]})
