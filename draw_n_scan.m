@@ -1,37 +1,37 @@
 tic;
 %%%%%PARAMS%%%%%%%%%%%%%%%%
-scan_is = [round(961*rand), round(961*rand), round(961*rand), round(961*rand)];
+scan_is =  223;%round(961*rand);% [round(961*rand), round(961*rand), round(961*rand), round(961*rand)];
 wannasee = 1;
 
 bin_E = 5;
 bin_k = 2;
-fass_sigma = 2;
+fass_sigma = .1;
 
 LineWidth = 1;
-draw_sigma = 2;
-krillin_sigma = 0.5;
+draw_sigma = 4;
+combadge_sigma = 2;
 
-draw_box = zeros(61,61);
-E_0 = 20;%20;
+draw_box = zeros(71,71);
+E_0 = 30;%20;
 E_B1 =5;
 E_B2 = size(draw_box,2)-10;
 K_0 = round(size(draw_box,1)/2);
 draw_x = (1:size(draw_box,1))';
 draw_x0 = draw_x - K_0;
 
-A_range = [1.5:.05:2.5];%[0.5:.5:3.0];%[.6:.2:2];%[1.8];%[1,2,3];
-B_range = 0:.001:.01;%[0:.002:.01];%[0,.05,.1];
-E_rough_range = (40:100) - E_0;
-K_rough_range = (80:100) - K_0;%round(101/2 - round(size(draw_box,1)/2)) + (-20:2:20);
+A_range = [1.0:.1:2.5];%[0.5:.5:3.0];%[.6:.2:2];%[1.8];%[1,2,3];
+B_range = 0:.002:.015;%[0:.002:.01];%[0,.05,.1];
+%E_rough_range = (50:90) -E_0;
+%K_rough_range = (80:100) -K_0 ;%round(101/2 - round(size(draw_box,1)/2)) + (-20:2:20);
 E_ref_range = -5:1:5;
-K_ref_range = -5:1:5;
+K_ref_range = -3:1:3;
 E_conff_range = -10:1:10;
 K_conff_range = -10:1:10;
 
 rough_scan_A = 1.9; 
 rough_scan_B = 0.0; 
 if (ismember(rough_scan_A,A_range) == 0) || (ismember(rough_scan_B,B_range) == 0)
-    disp('Please pick a rough starting point (A,B) that is included in [A,B_range]')
+    disp('Pick a rough starting point (A,B) that is included in [A,B_range]')
     return
 end
 
@@ -56,9 +56,8 @@ ABjudge = zeros(1,num_scans);
 %}
 ABBA_ITs = zeros(size(draw_box,1),size(draw_box,2),length(A_range)*length(B_range));
 
-
 %First draw all the A,B templates%%%
-A_IT_i = 1;
+ABBA_IT_i = 1;
 for A_i = 1:length(A_range)
     A = A_range(A_i);
     for B_i = 1:length(B_range)
@@ -89,7 +88,7 @@ for A_i = 1:length(A_range)
         
         ITP = insertShape(draw_box, 'Line', draw_itp_it, 'LineWidth',LineWidth);
         if nnz(ITP(:,1))==0   %Only consider A,B values that give lines that extend across draw_box
-            A_IT_i = A_IT_i + 1;
+            ABBA_IT_i = ABBA_IT_i + 1;
             continue
         end
         ITN = insertShape(draw_box, 'Line', draw_itn_it, 'LineWidth',LineWidth);
@@ -99,8 +98,8 @@ for A_i = 1:length(A_range)
 
         IT = IT_processor(ITP + ITN, draw_sigma, E_B1,E_0,E_B2);   
         
-        ABBA_ITs(:,:,A_IT_i) = IT;
-        A_IT_i = A_IT_i+1;
+        ABBA_ITs(:,:,ABBA_IT_i) = IT;
+        ABBA_IT_i = ABBA_IT_i+1;
     end
 end
 
@@ -116,6 +115,11 @@ for i = scan_is
     conebf = imgaussfilt(coneb,fass_sigma); %[fass,fass_k_off] = kLOSfinder5(cone,bin_E,bin_k);
     %fass = imgaussfilt(fass,fass_sigma);
     fass = conebf;
+    
+    Epix = round((rfc_big_Es(i) - bin_E/2)/bin_E);
+    kpix = round((rfc_big_ks(i) - bin_k/2)/bin_k);
+    K_rough_range = kpix - K_0 + [-2:2];
+    E_rough_range = Epix - E_0 + [-10:10];
     
     %%Scan first round roughly to find where to scan more closely, tbd is diff in
     %%summed intensities in top half of fass window vs bottom
@@ -133,9 +137,7 @@ for i = scan_is
             
             rough_fass_window = fass([1:size(draw_box,1)]+K_rough, [1:size(draw_box,2)]+E_rough);
             rough_fass_window_norm = window_processor(rough_fass_window); 
-           
-            rough_scan_table(K_rough_i,E_rough_i) = sum(dot(rough_fass_window_norm,rough_scan_IT));
-            
+                        
             sumIbot = sum(rough_fass_window_norm(1:K_0,:));
             sumItop = sum(rough_fass_window_norm(K_0+1:end,:));          
             
@@ -146,14 +148,15 @@ for i = scan_is
     end
     rough_scan_table = imgaussfilt(rough_scan_table,1);
     RST_weights = 1 - mat2gray(rough_scan_table_tbd);
-    rough_scan_table_weighted = imgaussfilt((rough_scan_table .* RST_weights),1);
+    %rough_scan_table_weighted = imgaussfilt((rough_scan_table .* RST_weights),1);
+    rough_scan_table_weighted = imgaussfilt(rough_scan_table,1);
     [K_scan_center_i,E_scan_center_i] = find(rough_scan_table_weighted==max(rough_scan_table_weighted(:)));
     
-    %figure, 
-    %subplot(1,3,1), imagesc(rough_scan_table), axis xy, 
+    figure, 
+    imagesc(rough_scan_table), axis xy, hold on,
     %subplot(1,3,2), imagesc(rough_scan_table_tbd), axis xy
     %subplot(1,3,3), imagesc(rough_scan_table_weighted), axis xy, hold on;
-    %plot(E_scan_center_i,K_scan_center_i,'r+'), hold off;
+    plot(E_scan_center_i,K_scan_center_i,'r+'), hold off;
 
 
     %%%%%%%%%%Now the actual ABEK scanning%%%%%%%%%
@@ -183,7 +186,7 @@ for i = scan_is
                     
             %Create corr table for AvsB at each E,K point       
             AB_MC_table = zeros(size(length(A_range),length(B_range)));
-            A_IT_i = 1;
+            AB_IT_i = 1;
             for A_i = 1:length(A_range)
                 A = A_range(A_i);
                 for B_i = 1:length(B_range)
@@ -192,8 +195,8 @@ for i = scan_is
                     fass_window = fass([1:size(draw_box,1)]+K_off, [1:size(draw_box,2)]+E_off);
                     fass_window_norm = window_processor(fass_window);
                     
-                    AB_MC_table(A_i,B_i) = sum(dot(fass_window_norm, ABBA_ITs(:,:,A_IT_i)));
-                    A_IT_i = A_IT_i+1;
+                    AB_MC_table(A_i,B_i) = sum(dot(fass_window_norm, ABBA_ITs(:,:,AB_IT_i)));
+                    AB_IT_i = AB_IT_i+1;
                 end
             end 
             %Choose A,B that gave max corr at the current E,K point, store in table
@@ -250,7 +253,7 @@ for i = scan_is
     combadge_ITN = combadge_ITN(:,:,1);
     
     combadge_IT = combadge_ITP + combadge_ITN; 
-    combadge_IT = imgaussfilt(combadge_IT, krillin_sigma); %to not penalize intensity from a good surface band that's slightly broad
+    combadge_IT = imgaussfilt(combadge_IT, combadge_sigma); %to not penalize intensity from a good surface band that's slightly broad
     combadge = combadge_IT;
     combadge(combadge~=0)=1;
     combadge = abs(1-combadge);
@@ -260,9 +263,9 @@ for i = scan_is
     combadge(starfleet.PixelIdxList{2})=0;
     combadge(starfleet.PixelIdxList{3})=0;
     
-    combadge(:,E_0+25:end) = zeros(size(combadge,1), size(combadge,2) - E_0 - 24);
+    combadge(:,E_0+25:end) = 0;
     
-    incombadge = sum(dot(combadge,fass_window_norm_it))/nnz(combadge) * 1000; 
+    incombadge = sum(dot(combadge,fass_window_norm_it))/nnz(combadge) ; 
     
     %Difference in sum of intensities between k>0 half and k<0 half for
     %each E column of chosen fass window, averaged
@@ -349,6 +352,7 @@ for i = scan_is
         ax1 = subplot(2,4,1);
         FixedWidth = get(0,'FixedWidthFontName');
         %text(0.2,0.5,{['A (eVA) :  ',num2str(A_it_it*bin_E/bin_k*.8107)];['B (eVA) :  ',num2str(B_it_it*bin_E/bin_k*.8107)];['MC:  ',num2str(MC_it)];...
+        
         text(0,0.5,{...
             ['A(bpix):  ',num2str(A_it_it)];...
             ['B(bpix):  ',num2str(B_it_it)];...
@@ -356,12 +360,14 @@ for i = scan_is
             ['K(bpix):  ',num2str(K_off_it+K_0)];...
             ['  '];...
             ['TBD: ',num2str(TBDs(i))];...
-            ['combadge: ',num2str(combadges(i))]}, 'FontName',FixedWidth,'FontSize',8);
-        axis off
+            ['combadge: ',num2str(combadges(i))]},'FontName',FixedWidth,'FontSize',8);%,num2str(combadges(i))]}, ...
+         axis off
 
         ax3 = subplot(2,4,6); 
         gray_smear_tablea = rot90(gray_smear_table,-1);
-        imagesc(K_conff_range,E_conff_range,gray_smear_tablea), axis xy
+        [asdf,asdff] = find(gray_smear_tablea==max(gray_smear_tablea(:)));
+        imagesc(K_conff_range,E_conff_range,gray_smear_tablea), axis xy, hold on;
+        plot(E_conff_range(asdff),K_conff_range(asdf),'w*'), hold off
         colormap(ax3, jet)
         title({['Ref Scan'];['Pts > ',num2str(multi_TH),': ',num2str(the_smear)]},'FontSize',8)
         %yticks([1,length(K_off_range)])
@@ -398,7 +404,7 @@ for i = scan_is
         h = imshow(greenlol);  axis xy
         set(h,'AlphaData',Ia);
         hold off;
-        title(num2str(ABjudge(i)));
+        title(num2str((i)));
         %colormap(ax6, winter)
         
         suptitle({['Scan i=',num2str(i)]})

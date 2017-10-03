@@ -56,7 +56,7 @@ scan_spread_cut = zeros(1,num_scans);
 wedge_sum = zeros(1,num_scans); 
 
 NNN=0;
-for i =  1:num_scans%[round(961*rand),round(961*rand),round(961*rand),round(961*rand),round(961*rand), round(961*rand)]%1:1:num_scans;  
+for i =  1%[round(961*rand),round(961*rand),round(961*rand),round(961*rand),round(961*rand), round(961*rand)]%1:1:num_scans;  
     NNN=NNN+1;
     if rem(i,100) == 0
         disp(['Now on scan ',num2str(i)])
@@ -67,6 +67,10 @@ for i =  1:num_scans%[round(961*rand),round(961*rand),round(961*rand),round(961*
     kpix = (rfc_big_ks(i) - bin_k/2)/bin_k;
     Epixhr = size(rfc_small_cut_bwg,2)/2 + 25; 
     kpixhr = size(rfc_small_cut_bwg,1)/2 + 10;
+    
+    
+    
+    
     
     scone = imgaussfilt(scone, rfc_cut_sigma);
     scone_b = Binning_2d(scone, bin_E, bin_k);
@@ -101,7 +105,7 @@ for i =  1:num_scans%[round(961*rand),round(961*rand),round(961*rand),round(961*
         DPI_small_cut(i) = sum(sum(scone_bg(max(1,y_offset):min(size(scone_bg,1),y_offset+size(rfc_small_cut_bwg,1)),window_small_cut_E_coor+x_offset-10:window_small_cut_E_coor+x_offset+10)));
     end
     
-    %{
+    
     figure;
     subplot(1,4,1), %imagesc(scan_Kaxis,scan_Eaxis,rot90(scan,-1)), axis xy, title(num2str(i)), hold on;
     imagesc(rot90(scan,-1)), axis xy, hold on;
@@ -122,7 +126,7 @@ for i =  1:num_scans%[round(961*rand),round(961*rand),round(961*rand),round(961*
     
     subplot(1,4,4), imagesc(rot90(imgaussfilt(Binning_2d(cones(:,:,i),3,2),rfc_cut_sigma),-1)), axis xy;
     title(['i=',num2str(i)]);
-    %}
+    
     
 end
 disp('Scanning Round 1 completed'), toc

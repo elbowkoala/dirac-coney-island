@@ -1,20 +1,20 @@
 table_title = 'rfc small scan 170928';
-dirac_Es = rfc_small_Es;   %input Energies vector (cone pixels)
-dirac_ks = rfc_small_ks;   %input mtm vector (cone pixels)
+dirac_Es = rfc_small_cut_Es;   %input Energies vector (cone pixels)
+dirac_ks = rfc_small_cut_ks;   %input mtm vector (cone pixels)
 
 DPEs_eV = rfc_small_cut_Es;%(rfc_FL_Es - rfc_small_cut_Es)*pix2eV;
 B_map = reshape(DPEs_eV,31,31);   
 %B_map = reshape(rfc_small_Es,31,31);
 
-E_interval_list = [355, 360];%[ .4,.43; .43,.45; .45,.46; .46,.47; .47,.49; .49,52 ];
+E_interval_list = [324,336.5; 336.5,348.7; 348.7, 357.8; 357.8,366.9;  366.9, 376; 376,385.2 ];%[ .4,.43; .43,.45; .45,.46; .46,.47; .47,.49; .49,52 ];
 B_interval_list = (E_interval_list - min(B_map(:)))/(max(B_map(:))-min(B_map(:)));
 
 %B_interval_list = [350,400];
 
 pre_filter = cat(1,[]);
-pre_filter(1,:) = [172,188, rfc_small_cut_ks];
-pre_filter(2,:) = [168,434, DPI_big];
-pre_filter(3,:) = [637,652, rfc_FL_Es];
+pre_filter(1,:) = [177,192, rfc_small_cut_ks];
+%pre_filter(2,:) = [168,434, DPI_big];
+%pre_filter(3,:) = [637,652, rfc_FL_Es];
 
 figure
 allfiltered = reshape(B_map,1,961);
@@ -28,11 +28,15 @@ for NN = 1:size(pre_filter,1)
     plot([pre_filter(NN,2),pre_filter(NN,2)],[0,max(hist(pre_filter(NN,3:end),40))],'r'), hold off;
 end
 filtered_A_map = reshape(allfiltered,31,31);
-subplot(NN,2,[1 3 5]) 
+subplot(NN,2,[1]) 
 imagesc(filtered_A_map), axis xy
- 
-A_interval_list = [.5,1];
 A_map = filtered_A_map;
+A_interval_list = [0.5,1];
+%{
+A_map = rfc_small_cut_ks;
+A_interval_list = [173,176; 176-181; 182,187];
+A_interval_list = (A_interval_list - min(A_map(:)))/(max(A_map(:))-min(A_map(:)));
+%}
 
 pix2eV = (1.599/(2*496));
 pix2invA = 0.512*0.04631/180*3.1415*14/30*sqrt(110-4);

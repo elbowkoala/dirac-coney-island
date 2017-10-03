@@ -22,6 +22,6 @@ for i = E_0 : E_B2
 end
 %}
 
-processed_IT = processed_IT_ ./ sum(processed_IT_(:));
+processed_IT = processed_IT_ ./ sqrt(sum(processed_IT_(:)));
 end
 

@@ -1,5 +1,5 @@
-raw_full_cone = zeros(size(cones(:,:,1)));
+result_comp = zeros(size(cones(:,:,1)));
 
 for i = 1:num_scans
-    raw_full_cone = raw_full_cone + cones(:,:,i);
+        result_comp = result_comp + result(:,:,i);
 end
