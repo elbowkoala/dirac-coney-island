@@ -1,20 +1,18 @@
-table_title = 'rfc small scan 170928';
-dirac_Es = rfc_small_cut_Es;   %input Energies vector (cone pixels)
-dirac_ks = rfc_small_cut_ks;   %input mtm vector (cone pixels)
+table_title = 'with YTs results';
+dirac_Es = dssd_Es;   %input Energies vector (cone pixels)
+dirac_ks = dssd_ks;   %input mtm vector (cone pixels)
 
-DPEs_eV = rfc_small_cut_Es;%(rfc_FL_Es - rfc_small_cut_Es)*pix2eV;
+DPEs_eV = dssd_Es;%(rfc_FL_Es - rfc_small_cut_Es)*pix2eV;
 B_map = reshape(DPEs_eV,31,31);   
 %B_map = reshape(rfc_small_Es,31,31);
 
-E_interval_list = [324,336.5; 336.5,348.7; 348.7, 357.8; 357.8,366.9;  366.9, 376; 376,385.2 ];%[ .4,.43; .43,.45; .45,.46; .46,.47; .47,.49; .49,52 ];
+E_interval_list = [331,346; 346,357; 356,367; 367,382];%,350; 350,355; 355,357.5; 357.5,360; 360,362.5; 362.5,365; 365,375; 375,380; 380,385 ];%[ .4,.43; .43,.45; .45,.46; .46,.47; .47,.49; .49,52 ];
 B_interval_list = (E_interval_list - min(B_map(:)))/(max(B_map(:))-min(B_map(:)));
 
-%B_interval_list = [350,400];
-
 pre_filter = cat(1,[]);
-pre_filter(1,:) = [177,192, rfc_small_cut_ks];
-%pre_filter(2,:) = [168,434, DPI_big];
-%pre_filter(3,:) = [637,652, rfc_FL_Es];
+pre_filter(1,:) = [176.4,190.7, dssd_ks];
+pre_filter(2,:) = [168,434, DPI_big];
+pre_filter(3,:) = [20,55, dssd_corrspreads];
 
 figure
 allfiltered = reshape(B_map,1,961);
