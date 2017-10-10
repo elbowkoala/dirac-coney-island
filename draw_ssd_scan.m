@@ -1,11 +1,11 @@
 tic;
 %%%%%PARAMS%%%%%%%%%%%%%%%%
-scan_is =  1:num_scans;%round(961*rand);% [round(961*rand), round(961*rand), round(961*rand), round(961*rand)];
+scan_is =  1:num_scans;% [round(961*rand), round(961*rand), round(961*rand), round(961*rand)];%(Neighbor_sites(12,14,31,31))';%round(961*rand);% [round(961*rand), round(961*rand), round(961*rand), round(961*rand)];
 wannasee = 0;
 
 bin_E = 5;
 bin_k = 2;
-fass_sigma = 3;
+fass_sigma = 5;
 b_E_1 = 25;
 b_E_2 = 130;
 b_k_1 = 40;
@@ -14,22 +14,24 @@ b_k_2 = 140;
 IT_sigma = 3;
 
 LineWidth = 1;
-draw_sigma = 4;
+draw_sigma = 5;
 
-draw_box = zeros(71,75);
-E_0 = 30;
+padding = 2*5;
+draw_box = zeros([71+padding],[75+padding]);
+E_0 = 30 + padding/2;
 K_0 = round(size(draw_box,1)/2);
 draw_x = (1:size(draw_box,1))';
 draw_x0 = draw_x - K_0;
 
-A_range = [1.5:.1:2.5];%[0.5:.5:3.0];%[.6:.2:2];%[1.8];%[1,2,3];
-B_range = [0:.002:.02];%[0:.002:.01];%[0,.05,.1];
+A_range = [1.3:.05:2.0];%[1.3:.1:2.5];%[0.5:.5:3.0];%[.6:.2:2];%[1.8];%[1,2,3];
+B_range = [0:.001:.02];% [0:.002:.02];%[0:.002:.01];%[0,.05,.1];
 
 A_range_eVA = A_range * (bin_E/bin_k) * .8107;
 B_range_eVA = B_range * (bin_E/bin_k) * .8107;
 
-corrspread_TH = 0.1;
+corrspread_TH = 0.05;
 %%%%%%%%%%%%%%%%%%%%
+
 
 dssd_Es = zeros(1,num_scans);
 dssd_ks = zeros(1,num_scans);
@@ -40,10 +42,11 @@ dssd_corrspreads = zeros(1,num_scans);
 
 
 %First draw all the A,B templates%%%
-ABBA_ITs = zeros(size(draw_box,1),size(draw_box,2),length(A_range)*length(B_range));
+ABBA_ITs = zeros(size(draw_box,1)-padding,size(draw_box,2)-padding,length(A_range)*length(B_range));
 nan_ABs = [];
 ABBA_IT_i = 1;
 nan_AB_i = 1;
+%figure;
 for A_i = 1:length(A_range)
     A = A_range(A_i);
     for B_i = 1:length(B_range)
@@ -57,7 +60,9 @@ for A_i = 1:length(A_range)
 
         draw_itp_curt = draw_itp(max(1,round(-A/(2*B)+K_0)):end,:);
         draw_itn_curt = draw_itn(1:min(length(draw_x),round(K_0+A/(2*B))),:);
-
+        draw_itp_curt = draw_itp;
+        draw_itn_curt = draw_itn;
+        
         draw_itp_it = reshape(draw_itp_curt',1,[]);
         draw_itn_it = reshape(draw_itn_curt',1,[]);
         
@@ -86,31 +91,46 @@ for A_i = 1:length(A_range)
         ITP = ITP(:,:,1);
         ITN = ITN(:,:,1);
         
-        IT = imgaussfilt( ITP+ITN, IT_sigma);
-        ITg = mat2gray(IT);
-        ITgm = ITg - mean(ITg(:));
+        ITT = ITP+ITN;
+        ITT(ITT~=0) = 1;
+        IT = imgaussfilt( ITT, IT_sigma);
+        ITc = IT((padding/2)+1:end-(padding/2),(padding/2)+1:end-(padding/2));
+        ITcg = mat2gray(ITc);
+        ITcgm = ITcg - mean(ITcg(:));
         
-        IT_ = IT;
-        IT_((IT~=0))=1;
+        IT_ = ITc;
+        IT_((ITc~=0))=1;
         IT_ = abs(1-IT_);
         
         IT_wedge = bwconncomp(IT_);
         if IT_wedge.NumObjects == 3
-            ITgm(IT_wedge.PixelIdxList{3}) = NaN;
+            ITcgm(IT_wedge.PixelIdxList{3}) = NaN;
         elseif IT_wedge.NumObjects == 4
-            ITgm(IT_wedge.PixelIdxList{2}) = NaN;
-            ITgm(IT_wedge.PixelIdxList{4}) = NaN;
+            numPixels = cellfun(@numel,IT_wedge.PixelIdxList);
+            for wedge_i = find(numPixels~=max(numPixels))
+                ITcgm(IT_wedge.PixelIdxList{wedge_i}) = NaN;
+            end
+            %ITcgm(IT_wedge.PixelIdxList{1}) = 100;
+            %ITcgm(IT_wedge.PixelIdxList{2}) = 200;
+            %ITcgm(IT_wedge.PixelIdxList{3}) = 300;
+            %ITcgm(IT_wedge.PixelIdxList{4}) = 400;
+
         end
         
         AAA_i = ceil(ABBA_IT_i/length(B_range));
         BBB_i = ABBA_IT_i - (AAA_i-1)*length(B_range);
-       
+        
+        show_IT = ITcgm((padding/2)+1:end-(padding/2),(padding/2)+1:end-(padding/2));
+        show_IT(isnan(show_IT)) = 100;
         %subplot(length(A_range),length(B_range),...
         %(length(A_range)-AAA_i)*length(B_range) + BBB_i)
-        %imshow(IT_template,'InitialMagnification','fit'), axis xy
-        %pause(.001)
+        %imagesc(show_IT), axis xy, axis off;
+        %figure,
+        %subplot(1,2,1), imagesc(IT), axis xy
+        %subplot(1,2,2), imagesc(ITcgm((padding/2)+1:end-(padding/2),(padding/2)+1:end-(padding/2))), axis xy
+        pause(.001)
 
-        ABBA_ITs(:,:,ABBA_IT_i) = ITgm;
+        ABBA_ITs(:,:,ABBA_IT_i) = ITcgm;
         ABBA_IT_i = ABBA_IT_i+1;
     end
 end
@@ -194,8 +214,9 @@ for i = scan_is
         
         figure, 
         subplot(2,2,1), 
-        imagesc(B_range,A_range,AB_corr_table), axis xy, title('AB\_corr\_table'), hold on;
+        imagesc(B_range,A_range,AB_corr_table), axis xy, hold on %title('AB\_corr\_table'), 
         plot(B_range(BB_it_i),A_range(AA_it_i),'w+'), hold off
+        title(['A=',num2str(A_range(AA_it_i)),' B=',num2str(B_range(BB_it_i))])
 
         subplot(2,2,2),
         imagesc((1:size(corr_IT,1)),fliplr(1:size(corr_IT,2)),rot90(corr_IT,1)), axis xy, hold on
@@ -204,12 +225,13 @@ for i = scan_is
 
         subplot(2,2,3), 
         imagesc((1:size(fass_image,1)),fliplr(1:size(fass_image,2)),rot90(fass_image,1)), axis xy
-        title(['DPI=',num2str(DPI_big(i))])
+        title(['DPI=',num2str(round(DPI_big(i)))])
 
         subplot(2,2,4), imagesc((1:size(fass_image,1)),fliplr(1:size(fass_image,2)),rot90(fass_image+1.5*overlay,1)), axis xy, hold on;
         plot([1,size(IT_template,1),size(IT_template,1),1,1]+ITmin_row-1,[1,1,size(IT_template,2),size(IT_template,2),1]+ITmin_col-1,'w'), hold off;
         title(['Epix=',num2str(DPE_pix),' Kpix=',num2str(DPK_pix)])
         suptitle(['i=',num2str(i)])
+        pause(.001)
     end
     
 end

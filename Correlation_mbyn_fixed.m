@@ -6,13 +6,13 @@ DPEs_eV = dssd_Es;%(rfc_FL_Es - rfc_small_cut_Es)*pix2eV;
 B_map = reshape(DPEs_eV,31,31);   
 %B_map = reshape(rfc_small_Es,31,31);
 
-E_interval_list = [331,346; 346,357; 356,367; 367,382];%,350; 350,355; 355,357.5; 357.5,360; 360,362.5; 362.5,365; 365,375; 375,380; 380,385 ];%[ .4,.43; .43,.45; .45,.46; .46,.47; .47,.49; .49,52 ];
+E_interval_list = [370,385; 385,390; 390,395; 395,400; 400,405; 405,415];%; 386.7,396.9; 396.9,407.1; 407.1,422.4];% ; 351.5,356.6; 356.6,361.7; 361.7,366.8; 366.8,382];%,350; 350,355; 355,357.5; 357.5,360; 360,362.5; 362.5,365; 365,375; 375,380; 380,385 ];%[ .4,.43; .43,.45; .45,.46; .46,.47; .47,.49; .49,52 ];
 B_interval_list = (E_interval_list - min(B_map(:)))/(max(B_map(:))-min(B_map(:)));
 
 pre_filter = cat(1,[]);
-pre_filter(1,:) = [176.4,190.7, dssd_ks];
+pre_filter(1,:) = [186.5, 200.8, dssd_ks];
 pre_filter(2,:) = [168,434, DPI_big];
-pre_filter(3,:) = [20,55, dssd_corrspreads];
+pre_filter(3,:) = [15,45, dssd_corrspreads];
 
 figure
 allfiltered = reshape(B_map,1,961);
