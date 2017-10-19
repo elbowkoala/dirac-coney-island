@@ -1,18 +1,19 @@
-table_title = 'with YTs results';
-dirac_Es = dssd_Es;   %input Energies vector (cone pixels)
-dirac_ks = dssd_ks;   %input mtm vector (cone pixels)
+table_title = 'after YTs results';
+dirac_Es = rfc_Es_after;   %input Energies vector (cone pixels)
+dirac_ks = rfc_ks_after;   %input mtm vector (cone pixels)
 
-DPEs_eV = dssd_Es;%(rfc_FL_Es - rfc_small_cut_Es)*pix2eV;
+DPEs_eV = rfc_Es_after;%(rfc_FL_Es - rfc_small_cut_Es)*pix2eV;
 B_map = reshape(DPEs_eV,31,31);   
 %B_map = reshape(rfc_small_Es,31,31);
 
-E_interval_list = [370,385; 385,390; 390,395; 395,400; 400,405; 405,415];%; 386.7,396.9; 396.9,407.1; 407.1,422.4];% ; 351.5,356.6; 356.6,361.7; 361.7,366.8; 366.8,382];%,350; 350,355; 355,357.5; 357.5,360; 360,362.5; 362.5,365; 365,375; 375,380; 380,385 ];%[ .4,.43; .43,.45; .45,.46; .46,.47; .47,.49; .49,52 ];
+E_interval_list = [340,350; 350,360; 360,370; 370,380];%[370,385; 385,390; 390,395; 395,400; 400,405; 405,415];%; 386.7,396.9; 396.9,407.1; 407.1,422.4];% ; 351.5,356.6; 356.6,361.7; 361.7,366.8; 366.8,382];%,350; 350,355; 355,357.5; 357.5,360; 360,362.5; 362.5,365; 365,375; 375,380; 380,385 ];%[ .4,.43; .43,.45; .45,.46; .46,.47; .47,.49; .49,52 ];
 B_interval_list = (E_interval_list - min(B_map(:)))/(max(B_map(:))-min(B_map(:)));
 
 pre_filter = cat(1,[]);
-pre_filter(1,:) = [186.5, 200.8, dssd_ks];
-pre_filter(2,:) = [168,434, DPI_big];
-pre_filter(3,:) = [15,45, dssd_corrspreads];
+pre_filter(1,:) = [177,192, rfc_ks_after];
+pre_filter(2,:) = [220,440, DPI_big];
+%pre_filter(3,:) = [9,27, rfc_corrspreads_before];
+%pre_filter(4,:) = [140,180, rfc_corrs_before];
 
 figure
 allfiltered = reshape(B_map,1,961);

@@ -1,7 +1,8 @@
 tic;
 %%%%%PARAMS%%%%%%%%%%%%%%%%
-scan_is =  1:num_scans;% [round(961*rand), round(961*rand), round(961*rand), round(961*rand)];%(Neighbor_sites(12,14,31,31))';%round(961*rand);% [round(961*rand), round(961*rand), round(961*rand), round(961*rand)];
+scan_is =  [round(961*rand), round(961*rand), round(961*rand), round(961*rand)];%(Neighbor_sites(12,14,31,31))';%round(961*rand);% [round(961*rand), round(961*rand), round(961*rand), round(961*rand)];
 wannasee = 0;
+wannasee_ABBAs = 0;
 
 bin_E = 5;
 bin_k = 2;
@@ -14,17 +15,17 @@ b_k_2 = 140;
 IT_sigma = 3;
 
 LineWidth = 1;
-draw_sigma = 5;
+draw_sigma = 4;
 
 padding = 2*5;
-draw_box = zeros([71+padding],[75+padding]);
+draw_box = zeros([71+padding],[85+padding]);
 E_0 = 30 + padding/2;
 K_0 = round(size(draw_box,1)/2);
 draw_x = (1:size(draw_box,1))';
 draw_x0 = draw_x - K_0;
 
-A_range = [1.3:.05:2.0];%[1.3:.1:2.5];%[0.5:.5:3.0];%[.6:.2:2];%[1.8];%[1,2,3];
-B_range = [0:.001:.02];% [0:.002:.02];%[0:.002:.01];%[0,.05,.1];
+A_range = [1.5:.05:2.5];%[1.3:.05:2.0];%[1.3:.1:2.5];%[0.5:.5:3.0];%[.6:.2:2];%[1.8];%[1,2,3];
+B_range = 0;%[0:.001:.02];% [0:.002:.02];%[0:.002:.01];%[0,.05,.1];
 
 A_range_eVA = A_range * (bin_E/bin_k) * .8107;
 B_range_eVA = B_range * (bin_E/bin_k) * .8107;
@@ -33,16 +34,17 @@ corrspread_TH = 0.05;
 %%%%%%%%%%%%%%%%%%%%
 
 
-dssd_Es = zeros(1,num_scans);
-dssd_ks = zeros(1,num_scans);
-dssd_As = zeros(1,num_scans);
-dssd_Bs = zeros(1,num_scans);
-dssd_corrs = zeros(1,num_scans);
-dssd_corrspreads = zeros(1,num_scans);
+Es_before = zeros(1,num_scans);
+ks_before = zeros(1,num_scans);
+As_before = zeros(1,num_scans);
+Bs_before = zeros(1,num_scans);
+corrs_before = zeros(1,num_scans);
+corrspreads_before = zeros(1,num_scans);
 
 
 %First draw all the A,B templates%%%
 ABBA_ITs = zeros(size(draw_box,1)-padding,size(draw_box,2)-padding,length(A_range)*length(B_range));
+ABBA_IT10s = zeros(size(draw_box,1)-padding,size(draw_box,2)-padding,length(A_range)*length(B_range));
 nan_ABs = [];
 ABBA_IT_i = 1;
 nan_AB_i = 1;
@@ -96,41 +98,51 @@ for A_i = 1:length(A_range)
         IT = imgaussfilt( ITT, IT_sigma);
         ITc = IT((padding/2)+1:end-(padding/2),(padding/2)+1:end-(padding/2));
         ITcg = mat2gray(ITc);
-        ITcgm = ITcg - mean(ITcg(:));
+        ITcgm = ITcg;
+        %ITcgm = ITcg - mean(ITcg(:));
         
-        IT_ = ITc;
+        IT_ = ITcg;
         IT_((ITc~=0))=1;
         IT_ = abs(1-IT_);
         
-        IT_wedge = bwconncomp(IT_);
-        if IT_wedge.NumObjects == 3
-            ITcgm(IT_wedge.PixelIdxList{3}) = NaN;
-        elseif IT_wedge.NumObjects == 4
-            numPixels = cellfun(@numel,IT_wedge.PixelIdxList);
-            for wedge_i = find(numPixels~=max(numPixels))
-                ITcgm(IT_wedge.PixelIdxList{wedge_i}) = NaN;
-            end
-            %ITcgm(IT_wedge.PixelIdxList{1}) = 100;
-            %ITcgm(IT_wedge.PixelIdxList{2}) = 200;
-            %ITcgm(IT_wedge.PixelIdxList{3}) = 300;
-            %ITcgm(IT_wedge.PixelIdxList{4}) = 400;
-
+        wedge_labels = bwlabel(IT_);
+        label_bot = wedge_labels(round(size(IT_,1)/2),1);
+        label_top = wedge_labels(round(size(IT_,1)/2),end);
+        label_left = wedge_labels(1,round(size(IT_,2)/2));
+        label_right = wedge_labels(end,round(size(IT_,2)/2));
+        
+        if label_top ~= 0
+            ITcgm(wedge_labels == label_top) = NaN;
+        end
+        if label_bot ~= 0
+            ITcgm(wedge_labels == label_bot) = NaN;
+        end
+        if label_left ~= 0
+            ITcgm(wedge_labels == label_left) = 0;
+        end
+        if label_right ~= 0
+            ITcgm(wedge_labels == label_right) = 0;
         end
         
-        AAA_i = ceil(ABBA_IT_i/length(B_range));
-        BBB_i = ABBA_IT_i - (AAA_i-1)*length(B_range);
+        ITcgm = ITcgm - nanmean(ITcgm(:));
+        IT10 = ITcgm;
+        IT10(isnan(IT10)==0) = 1;
+        IT10(isnan(IT10)) = 0;
         
-        show_IT = ITcgm((padding/2)+1:end-(padding/2),(padding/2)+1:end-(padding/2));
-        show_IT(isnan(show_IT)) = 100;
-        %subplot(length(A_range),length(B_range),...
-        %(length(A_range)-AAA_i)*length(B_range) + BBB_i)
-        %imagesc(show_IT), axis xy, axis off;
-        %figure,
-        %subplot(1,2,1), imagesc(IT), axis xy
-        %subplot(1,2,2), imagesc(ITcgm((padding/2)+1:end-(padding/2),(padding/2)+1:end-(padding/2))), axis xy
-        pause(.001)
+        if wannasee_ABBAs == 1       
+            AAA_i = ceil(ABBA_IT_i/length(B_range));
+            BBB_i = ABBA_IT_i - (AAA_i-1)*length(B_range);
 
+            show_IT = ITcgm;%((padding/2)+1:end-(padding/2),(padding/2)+1:end-(padding/2));
+            show_IT(isnan(show_IT)) = 100;
+            subplot(length(A_range),length(B_range),...
+            (length(A_range)-AAA_i)*length(B_range) + BBB_i)
+            imagesc(show_IT), axis xy, axis off;
+            pause(.001)
+        end
+        
         ABBA_ITs(:,:,ABBA_IT_i) = ITcgm;
+        ABBA_IT10s(:,:,ABBA_IT_i) = IT10;
         ABBA_IT_i = ABBA_IT_i+1;
     end
 end
@@ -142,7 +154,7 @@ for i = scan_is
         disp(['Starting scan #',num2str(i)]), toc
     end
     
-    scone = cones(:,:,i);
+    scone = result1(:,:,i);
     scone_f = imgaussfilt(scone,fass_sigma);   
     scone_bf = Binning_2d(scone_f, bin_E, bin_k);  
     scone_bfc = scone_bf(b_k_1:b_k_2, b_E_1:b_E_2);
@@ -198,12 +210,12 @@ for i = scan_is
     DPE_pix = (DPE_b * bin_E) + bin_E/2;
     DPK_pix = (DPK_b* bin_k) + bin_k/2;
     
-    dssd_Es(i) = DPE_pix;
-    dssd_ks(i) = DPK_pix;
-    dssd_As(i) = A_range(AA_it_i);
-    dssd_Bs(i) = B_range(BB_it_i);
-    dssd_corrs(i) = min(corr_IT(:));
-    dssd_corrspreads(i) = corrspread;
+    Es_before(i) = DPE_pix;
+    ks_before(i) = DPK_pix;
+    As_before(i) = A_range(AA_it_i);
+    Bs_before(i) = B_range(BB_it_i);
+    corrs_before(i) = min(corr_IT(:));
+    corrspreads_before(i) = corrspread;
     
 
     
@@ -221,7 +233,7 @@ for i = scan_is
         subplot(2,2,2),
         imagesc((1:size(corr_IT,1)),fliplr(1:size(corr_IT,2)),rot90(corr_IT,1)), axis xy, hold on
         plot(ITmin_row,ITmin_col,'w+'), hold off
-        title({['spread=',num2str(dssd_corrspreads(i))];['minC=',num2str(min(corr_IT(:)))]})
+        title({['spread=',num2str(corrspreads_before(i))];['minC=',num2str(min(corr_IT(:)))]})
 
         subplot(2,2,3), 
         imagesc((1:size(fass_image,1)),fliplr(1:size(fass_image,2)),rot90(fass_image,1)), axis xy

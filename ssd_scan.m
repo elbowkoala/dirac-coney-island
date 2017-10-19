@@ -1,11 +1,11 @@
 tic; 
 wannasee = 0;
-scan_is = 1:num_scans;
+scan_is = 1:961;
 
-ssd_sym_YT_Es = zeros(1,num_scans);
-ssd_sym_YT_ks = zeros(1,num_scans);
-wedge_sym_YT_sum = zeros(1,num_scans); 
-corr_sym_YT_spread = zeros(1,num_scans);
+rfc_Es_before = zeros(1,num_scans);
+rfc_ks_before = zeros(1,num_scans);
+rfc_wedges_before = zeros(1,num_scans); 
+rfc_corrspreads_before = zeros(1,num_scans);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%% Parameters %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -17,19 +17,20 @@ ssd_sigma = 3;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%% Making the 0th-Order Template %%%%%%%%%%%%%%%%%%%%%%%%%%%
-%{
+
 raw_full_cone = zeros(size(cone_range_K,2),size(cone_range_E,2));
 
 for i = 1:1:num_scans;
     raw_full_cone = raw_full_cone + cones(:,:,i);
 end
-%}
-rfc_b = Binning_2d(YTrfc, bin_E, bin_k);
+
+
+rfc_b = Binning_2d(raw_full_cone, bin_E, bin_k);
 rfc_patch = rfc_b(51:130,81:160);
 %rfc_patch = rfc_b(40:140,65:210);
 %rfc_patch = rfc_b(:,195:235);
-[rfc_patch_sym, rfc_patch_symkaxis] = Symmetrized_spectra(rfc_patch,(1:size(rfc_patch,1))');
-rfc_patch_gray = mat2gray(rfc_patch_sym);
+%[rfc_patch_sym, rfc_patch_symkaxis] = Symmetrized_spectra(rfc_patch,(1:size(rfc_patch,1))');
+rfc_patch_gray = mat2gray(rfc_patch);
 ssd_template = rfc_patch_gray - mean(rfc_patch_gray(:));
 
 template_DPK = 42;
@@ -60,12 +61,12 @@ for i = scan_is%[round(961*rand),round(961*rand),round(961*rand),round(961*rand)
     end
     b_E = round((ssd_big_Es(i)-bin_E/2)/bin_E);
     b_k = round((mean_ssd_big_k-bin_k/2)/bin_k);
-    scone_b_E_range = [round( b_E - size(template,2)/2 - 25) : round(b_E + size(template,2)/2 + 35)];
-    scone_b_k_range = [round( b_k - size(template,1)/2 - 15) : round(b_k + size(template,1)/2 + 15)];
+    scone_b_E_range = [round( b_E - size(ssd_template,2)/2 - 25) : round(b_E + size(ssd_template,2)/2 + 35)];
+    scone_b_k_range = [round( b_k - size(ssd_template,1)/2 - 15) : round(b_k + size(ssd_template,1)/2 + 15)];
     
     
     
-    scone = result(:,:,i);
+    scone = cones(:,:,i);
     
     scone = imgaussfilt(scone, ssd_sigma);
     scone_b = Binning_2d(scone, bin_E, bin_k);
@@ -95,19 +96,19 @@ for i = scan_is%[round(961*rand),round(961*rand),round(961*rand),round(961*rand)
     ssd_E_b = ssdmin_col + template_DPE + scone_b_E_range(1)-1 - 1;
     ssd_k_b = ssdmin_row + template_DPK +scone_b_k_range(1)-1 - 1;
 
-    ssd_sym_YT_Es(i) = ssd_E_b * bin_E + bin_E/2;
-    ssd_sym_YT_ks(i) = ssd_k_b * bin_k + bin_k/2;
+    rfc_Es_before(i) = ssd_E_b * bin_E + bin_E/2;
+    rfc_ks_before(i) = ssd_k_b * bin_k + bin_k/2;
     
     
     overlay = zeros(size(ssd_image));
     wedge_overlay = zeros(size(ssd_image));
     overlay((1:size(ssd_template,1))+ssdmin_row-1,(1:size(ssd_template,2))+ssdmin_col-1) = ssd_template;
     wedge_overlay((1:size(ssd_template,1))+ssdmin_row-1,(1:size(ssd_template,2))+ssdmin_col-1) = wedge;
-    wedge_sym_YT_sum(i) = sum(dot(wedge_overlay,scone_bg))/(nnz(wedge_overlay));
+    rfc_wedges_before(i) = sum(dot(wedge_overlay,scone_bg))/(nnz(wedge_overlay));
     [wedge_row,wedge_col] = find(wedge~=0);
     
     corr_gray = mat2gray(corr);
-    corr_sym_YT_spread(i) = length(find(corr_gray<0.1))/(size(corr,1)*size(corr,2));
+    rfc_corrspreads_before(i) = length(find(corr_gray<0.1))/(size(corr,1)*size(corr,2));
     
     if wannasee == 1
         
@@ -126,22 +127,22 @@ for i = scan_is%[round(961*rand),round(961*rand),round(961*rand),round(961*rand)
         subplot(2,2,3)
         imagesc((1:size(corr,1)),fliplr(1:size(corr,2)),rot90(corr,1)), axis xy, hold on
         plot(ssdmin_row,ssdmin_col,'w+'), hold off
-        title(['spread = ',num2str(round(corr_sym_YT_spread(i),3))])
+        title(['spread = ',num2str(round(rfc_corrspreads_before(i),3))])
 
 
         subplot(2,2,4)
         imagesc((1:size(ssd_image,1)),fliplr(1:size(ssd_image,2)),rot90(overlay+ssd_image,1)), axis xy
-        title(['ws = ',num2str(round(wedge_sym_YT_sum(i),3))])
+        title(['ws = ',num2str(round(rfc_wedges_before(i),3))])
 
-        suptitle(['i=',num2str(i),'  E=',num2str(ssd_sym_YT_Es(i)),'  k=',num2str(ssd_sym_YT_ks(i))])
+        suptitle(['i=',num2str(i),'  E=',num2str(rfc_Es_before(i)),'  k=',num2str(rfc_ks_before(i))])
         pause(.01)
     end
 end
 %disp('Scanning Round 1 completed'), toc
+toc
 
-
-E_small_map = reshape(ssd_sym_YT_Es, 31, 31);
-k_small_map = reshape(ssd_sym_YT_ks, 31, 31);
+E_small_map = reshape(rfc_Es_before, 31, 31);
+k_small_map = reshape(rfc_ks_before, 31, 31);
 
 EE_small_sd = mean([std(E_small_map(:,2:end)-E_small_map(:,1:end-1)),std(E_small_map(2:end,:)-E_small_map(1:end-1,:))]);
 kk_small_sd = mean([std(k_small_map(:,2:end)-k_small_map(:,1:end-1)),std(k_small_map(2:end,:)-k_small_map(1:end-1,:))]);
