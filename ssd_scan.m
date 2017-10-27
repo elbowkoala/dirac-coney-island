@@ -1,6 +1,6 @@
 tic; 
-wannasee = 0;
-scan_is = 1:961;
+wannasee = 1;
+scan_is = 1;
 
 rfc_Es_before = zeros(1,num_scans);
 rfc_ks_before = zeros(1,num_scans);

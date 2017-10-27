@@ -96,7 +96,7 @@ for A_i = 1:length(A_range)
         ITP = ITP(:,:,1);
         ITN = ITN(:,:,1);
 
-        IT = IT_processor(ITP + ITN, draw_sigma, E_B1,E_0,E_B2);   
+        IT = IT_processor((ITP + ITN), 0,0);%draw_sigma, E_B1,E_0,E_B2);   
         
         ABBA_ITs(:,:,ABBA_IT_i) = IT;
         ABBA_IT_i = ABBA_IT_i+1;
