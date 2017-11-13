@@ -1,6 +1,8 @@
 tic; 
-%load 'cones.mat'
-%load 'ssd_big_scan_171003.mat'
+if load_data == 1  
+    load 'cones.mat';
+    load 'ssd_big_scan_171003.mat';
+end
 
 wannasee = 0;
 scan_is =  i;% [round(961*rand), round(961*rand),round(961*rand),round(961*rand)] ;

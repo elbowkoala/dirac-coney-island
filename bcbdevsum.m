@@ -3,15 +3,16 @@
 function DD = bcbdevsum(a)
 
 global x_x y_y FL_param
-a(1) = round(abs(a(1)));
-a(2) = abs(a(2));
-a(3) = abs(a(3));
-a(4) = abs(a(4));
+FL_p = round(FL_param);
+a(1) = round((a(1)));
+%a(2) = abs(a(2));
+%a(3) = abs(a(3));
+%a(4) = abs(a(4));
 
 y_fit = zeros(size(x_x));
-y_fit(1:a(1)) = a(2);
-y_fit(a(1)+1:round(FL_param)) = a(2)+a(3);
-y_fit(round(FL_param)+1:end) = a(4);
+y_fit(1:a(1)) = a(2)^2;
+y_fit(a(1)+1:(FL_p)) = a(2)^2+a(3)^2;
+y_fit((FL_p)+1:end) = a(4)^2;
 
 DD = sum((y_y - y_fit).^2);
 

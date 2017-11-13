@@ -4,12 +4,12 @@ function DD = dosdevsum(a)
 
 global x__x y__y 
 a(1) = round(abs(a(1)));
-a(2) = -abs(a(2));
-a(4) = +abs(a(4));
+a(2) = abs(a(2));
+%a(4) = +abs(a(4));
 
 y_fit = zeros(size(x__x));
-y_fit(1:a(1)) = a(2)*x__x(1:a(1)) + a(3);
-y_fit(a(1)+1:end) = a(4)*x__x(a(1)+1:end) + a(5);
+y_fit(1:a(1)) = -a(2)*x__x(1:a(1)) + a(3);
+y_fit(a(1)+1:end) = a(2)*x__x(a(1)+1:end) - 2*a(2)*x__x(a(1)) + a(3);
 
 DD = sum((y__y - y_fit).^2);
 

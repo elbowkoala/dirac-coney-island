@@ -1,0 +1,38 @@
+
+wannasee = 0;
+scone_sigma = 5;
+
+tic
+for i = 33%[round(961*rand),round(961*rand),round(961*rand),round(961*rand),round(961*rand), round(961*rand)]%1:1:num_scans;  
+    if rem(i,100) == 0
+        disp(['Now on scan ',num2str(i), ';  time: ',num2str(toc)])
+    end
+    scone = cones(:,:,i);
+    
+    scone = imgaussfilt(scone, scone_sigma);
+    %scone_b = Binning_2d(scone, bin_E, bin_k);
+    %scone_b = scone_b(scone_b_k_range,scone_b_E_range);
+    
+    %scone_bg = mat2gray(scone_b);    
+    %image = scone_bg;
+
+    klosrange = (100:250);
+    normcorr = zeros(1,length(klosrange));
+    krow_n = 1;
+    for krow =  klosrange
+        hwidth = min(krow-1, (size(scone,1)-krow-1));
+        f_img1 = mat2gray(scone(krow-hwidth:krow+hwidth, :));
+        f_img2 = flipud(f_img1);
+           
+        f_mean = mean(f_img1(:));
+        f_denom = sum(sum((f_img1-f_mean).^2));
+        
+        normcorr(krow_n) = sum(sum((f_img1-f_mean).*(f_img2-f_mean)))/f_denom;
+        krow_n = krow_n+1;
+    end
+    
+    kLOS(i) = klosrange(1) + find(normcorr==max(normcorr)) -1;
+    figure, imagesc(scone), axis xy, hold on;
+    plot('
+end
+

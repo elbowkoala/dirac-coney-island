@@ -1,18 +1,24 @@
-table_title = 'with YTs results';
-dirac_Es = dssd_Es;   %input Energies vector (cone pixels)
-dirac_ks = dssd_ks;   %input mtm vector (cone pixels)
+load rfc_big_scan_170927.mat;
+load rfc_FL_scan_170927.mat;
+load cones.mat;
 
-DPEs_eV = dssd_Es;%(rfc_FL_Es - rfc_small_cut_Es)*pix2eV;
+table_title = 'after YTs results rfc';
+dirac_Es = dos_Es;rfc_Es_after;   %input Energies vector (cone pixels)
+dirac_ks = rfc_ks_after;   %input mtm vector (cone pixels)
+
+DPEs_eV = rfc_Es_after;%(rfc_FL_Es - rfc_small_cut_Es)*pix2eV;
 B_map = reshape(DPEs_eV,31,31);   
 %B_map = reshape(rfc_small_Es,31,31);
 
-E_interval_list = [371.4,386.7; 386.7,396.9; 396.9,407.1; ; 351.5,356.6; 356.6,361.7; 361.7,366.8; 366.8,382];%,350; 350,355; 355,357.5; 357.5,360; 360,362.5; 362.5,365; 365,375; 375,380; 380,385 ];%[ .4,.43; .43,.45; .45,.46; .46,.47; .47,.49; .49,52 ];
+%E_interval_list = [350,360; 360,365; 365,370; 370,375; 375,380; 380,390; 390,410];%[370,385; 385,390; 390,395; 395,400; 400,405; 405,415];%; 386.7,396.9; 396.9,407.1; 407.1,422.4];% ; 351.5,356.6; 356.6,361.7; 361.7,366.8; 366.8,382];%,350; 350,355; 355,357.5; 357.5,360; 360,362.5; 362.5,365; 365,375; 375,380; 380,385 ];%[ .4,.43; .43,.45; .45,.46; .46,.47; .47,.49; .49,52 ];
+E_interval_list = [300,320; 320,340; 340,360; 360,380];
 B_interval_list = (E_interval_list - min(B_map(:)))/(max(B_map(:))-min(B_map(:)));
 
 pre_filter = cat(1,[]);
-pre_filter(1,:) = [176.4,190.7, dssd_ks];
-pre_filter(2,:) = [168,434, DPI_big];
-pre_filter(3,:) = [20,55, dssd_corrspreads];
+pre_filter(1,:) = [176,188, rfc_ks_after];
+pre_filter(2,:) = [250,440, DPI_big];
+%pre_filter(3,:) = [9,27, rfc_corrspreads_after];
+pre_filter(3,:) = [.8,1, rfc_corrs_after];
 
 figure
 allfiltered = reshape(B_map,1,961);
@@ -39,7 +45,7 @@ A_interval_list = (A_interval_list - min(A_map(:)))/(max(A_map(:))-min(A_map(:))
 pix2eV = (1.599/(2*496));
 pix2invA = 0.512*0.04631/180*3.1415*14/30*sqrt(110-4);
 
-[E_interp,K_interp] = meshgrid(-149.5:.5:350, -80:.5:80); 
+[E_interp,K_interp] = meshgrid(-199.5:.5:350, -80:.5:80); 
 full_arpes = zeros(size(E_interp));
 
 [region_list]=Correlation_list_indep_ranges(A_map,B_map,A_interval_list,B_interval_list);
@@ -145,7 +151,7 @@ for iii=1:size(region_list,1)
     end
     ax2 = subplot(2,size(B_interval_list,1),iii+size(B_interval_list,1));
     imagesc(B_map), axis xy, hold on;
-    plot(map_regions(1,:,iii),map_regions(2,:,iii),'b.'), hold off;
+    plot(map_regions(1,:,iii),map_regions(2,:,iii),'w.'), hold off;
     title(['nnn=',num2str(nnn_scans(iii))])
     colormap jet
 end
