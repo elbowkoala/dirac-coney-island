@@ -2,12 +2,15 @@ load rfc_big_scan_170927.mat;
 load rfc_FL_scan_170927.mat;
 load rfc_ncorr_scan_171019w.mat;
 load cones.mat;
+load pre_dos_Es;
 
-table_title = 'with dosE';
-dirac_Es = dos_Es;%rfc_Es_after;   %input Energies vector (cone pixels)
+table_title = 'pre\_dos\_E fit';
+dirac_Es = pre_dos_Es;%rfc_Es_after;   %input Energies vector (cone pixels)
 dirac_ks = .5*(rfc_ks_after+kLOS);   %input mtm vector (cone pixels)
+EV_map = reshape(((rfc_FL_Es - dirac_Es) * pix2eV),31,31);
 
-DPEs_eV = the_Es;%rfc_Es_after;%(rfc_FL_Es - rfc_small_cut_Es)*pix2eV;
+
+DPEs_eV = (rfc_FL_Es - pre_dos_Es)*pix2eV;%the_Es;%rfc_Es_after;%(rfc_FL_Es - rfc_small_cut_Es)*pix2eV;
 B_map = reshape(DPEs_eV,31,31);   
 %B_map = reshape(rfc_small_Es,31,31);
 
@@ -151,10 +154,11 @@ for iii=1:size(region_list,1)
         nnn=nnn+1;
     end
     ax2 = subplot(2,size(B_interval_list,1),iii+size(B_interval_list,1));
-    imagesc(B_map), axis xy, hold on;
-    plot(map_regions(1,:,iii),map_regions(2,:,iii),'w+'), hold off;
+    imagesc(EV_map), axis xy, hold on;
+    plot(map_regions(1,:,iii),map_regions(2,:,iii),'k*'), hold off;
     title(['nnn=',num2str(nnn_scans(iii))])
     colormap jet
+    caxis(ax2, [.38,.65])
 end
 suptitle([table_title,', total scans: ',num2str(NNN)]);
 

@@ -2,7 +2,7 @@ load rfc_big_scan_170927.mat;
 load rfc_FL_scan_170927.mat;
 load cones.mat;
 
-table_title = 'with dosE';
+table_title = 'BCB fit';
 dirac_Es = BCB_Es;%rfc_Es_after;   %input Energies vector (cone pixels)
 dirac_ks = kLOS;%.5*(rfc_ks_after+kLOS);   %input mtm vector (cone pixels)
 
@@ -151,7 +151,7 @@ for iii=1:size(region_list,1)
     end
     ax2 = subplot(2,size(B_interval_list,1),iii+size(B_interval_list,1));
     imagesc(B_map), axis xy, hold on;
-    plot(map_regions(1,:,iii),map_regions(2,:,iii),'w.'), hold off;
+    plot(map_regions(1,:,iii),map_regions(2,:,iii),'w+'), hold off;
     title(['nnn=',num2str(nnn_scans(iii))])
     colormap jet
 end

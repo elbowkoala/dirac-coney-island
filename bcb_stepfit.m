@@ -19,14 +19,15 @@ ssKpm = 5;
 bcbmarj = 25;
 a1_range = [0:10:50];
 bcb_sigma = 10;
-dos_sigma = 5;
+dos_sigma = 3;
 
 
-final_bcb_params = zeros(4,961);
-final_bcb_Rsquareds = zeros(1,961);
+%final_bcb_params = zeros(4,961);
+%final_bcb_Rsquareds = zeros(1,961);
+%bcb_finds = zeros(1,961);
+
 final_dos_params = zeros(4,961);
 final_dos_Rsquareds = zeros(1,961);
-bcb_finds = zeros(1,961);
 dos_Es = zeros(1,961);
 dos_Ks = zeros(1,961);
 scan_errors = zeros(1,961);
@@ -84,11 +85,15 @@ for i = round(961*rand)
         final_bcb_params(:,i) = afinal';
         final_bcb_Rsquareds(i) = R_squared;
         
+        dos_start = round(pre_dos_Es(i)-80);
+        dos_end = round(bcb_finds(i));%min([500,round(bcb_finds(i))]);
         
         %%Now use found bcb to do DOS fit%%
         ssKs = ssK + [-16:2:16];
         kLOS_Rsquareds = zeros(size(ssKs));
         kLOS_intercepts = zeros(size(ssKs));
+        kLOS_y__fit = zeros(length(ssKs),(dos_end-dos_start+1));
+        kLOS_params = zeros(length(ssKs),4);
         for ssK_i = 1:length(ssKs)
             
             kwts = abs([1:size(ss,1)]-ssKs(ssK_i));
@@ -96,8 +101,7 @@ for i = round(961*rand)
             DOS = sum(repmat(kwts, size(ss,2), 1)' .*imgaussfilt(cone,dos_sigma));
 
             %dos_start = find(DOS(200:250) == max(DOS(200:250))) + 199 + 20;
-            dos_start = round(pre_dos_Es(i) - 50);
-            y__y = DOS(dos_start : min([500,round(bcb_finds(i))]));% min(500,bcb_find));
+            y__y = DOS(dos_start : dos_end);% min(500,bcb_find));
             x__x = (1:length(y__y));
 
             b1 = round(length(x__x)/2);
@@ -119,6 +123,9 @@ for i = round(961*rand)
             intercept = (bfinal(4) - bfinal(3))/(-bfinal(2) - bfinal(2));
             SS__tot = sum((y__y-mean(y__y)).^2);
             R__squared = 1 - (dosdevsum(bfinal))/SS__tot;
+            
+            kLOS_y__fit(ssK_i,:) = y__fit;
+            kLOS_params(ssK_i,:) = bfinal;
             kLOS_Rsquareds(ssK_i) = R__squared; 
             kLOS_intercepts(ssK_i) = intercept;
             
@@ -136,22 +143,37 @@ for i = round(961*rand)
             title(['kLOS=',num2str(ssKs(ssK_i))])
             %}
         end
-        dos_K = ssKs(find(kLOS_Rsquareds==max(kLOS_Rsquareds)));
-        dos_E = kLOS_intercepts(find(kLOS_Rsquareds==max(kLOS_Rsquareds))) + dos_start - 1; 
+        max_kLOS_i = find(kLOS_Rsquareds==max(kLOS_Rsquareds));
+        
+        dos_K = ssKs(max_kLOS_i);
+        dos_E = kLOS_intercepts(max_kLOS_i) + dos_start - 1; 
         
         dos_Es(i) = dos_E;
         dos_Ks(i) = dos_K; 
-        final_dos_params(:,i) = bfinal';
-        final_dos_Rsquareds(i) = R__squared;
+        final_dos_params(:,i) = kLOS_params(max_kLOS_i,:)';
+        final_dos_Rsquareds(i) = kLOS_Rsquareds(max_kLOS_i);
         
         figure,
-        subplot(2,1,1), plot(kLOS_Rsquareds)
-        subplot(2,1,2), imagesc(ss), axis xy, hold on;
+        subplot(2,2,1), plot(kLOS_Rsquareds)
+        
+        subplot(2,2,2),
+        plot(x__x, y__y,'k'), hold on;
+        plot(x__x, [kLOS_y__fit(round(length(ssKs)/2),:)], 'r'), hold off;
+        title(['preE=',num2str(round(pre_dos_Es(i),2)),'  Rsq=',num2str(kLOS_Rsquareds(round(length(ssKs)/2)))])
+            
+        
+        
+        subplot(2,2,3), imagesc(ss), axis xy, hold on;
         plot([0,size(ss,2)],[kLOS(i),kLOS(i)],'w'), hold on;
         plot(pre_dos_Es(i),kLOS(i),'w*'), hold on;
         plot([0,size(ss,2)],[dos_K,dos_K],'r'), hold on;
         plot(dos_Es(i), dos_Ks(i), 'r*'), hold off;
         
+        subplot(2,2,4),
+        plot(x__x, y__y,'k'), hold on;
+        plot(x__x, [kLOS_y__fit(max_kLOS_i,:)], 'r'), hold off;
+        title(['E=',num2str(round(dos_E,2)),'  Rsq=',num2str(final_dos_Rsquareds(i))])
+            
         
         
         
