@@ -3,15 +3,15 @@ load rfc_FL_scan_170927.mat;
 load cones.mat;
 
 table_title = 'with dosE';
-dirac_Es = bcb_finds;%rfc_Es_after;   %input Energies vector (cone pixels)
-dirac_ks = .5*(rfc_ks_after+kLOS);   %input mtm vector (cone pixels)
+dirac_Es = BCB_Es;%rfc_Es_after;   %input Energies vector (cone pixels)
+dirac_ks = kLOS;%.5*(rfc_ks_after+kLOS);   %input mtm vector (cone pixels)
 
-DPEs_eV = bcb_finds;%rfc_Es_after;%(rfc_FL_Es - rfc_small_cut_Es)*pix2eV;
+DPEs_eV = BCB_Es;%bcb_finds;%rfc_Es_after;%(rfc_FL_Es - rfc_small_cut_Es)*pix2eV;
 B_map = reshape(DPEs_eV,31,31);   
 %B_map = reshape(rfc_small_Es,31,31);
 
 %E_interval_list = [350,360; 360,365; 365,370; 370,375; 375,380; 380,390; 390,410];%[370,385; 385,390; 390,395; 395,400; 400,405; 405,415];%; 386.7,396.9; 396.9,407.1; 407.1,422.4];% ; 351.5,356.6; 356.6,361.7; 361.7,366.8; 366.8,382];%,350; 350,355; 355,357.5; 357.5,360; 360,362.5; 362.5,365; 365,375; 375,380; 380,385 ];%[ .4,.43; .43,.45; .45,.46; .46,.47; .47,.49; .49,52 ];
-E_interval_list = [465,480; 480,495; 495,510; 510,525; 525,540; 545,560];%[320,340; 340,350; 350,355; 355,360; 360,380];
+E_interval_list = [465,480; 480,495; 495,500; 505,510; 510,525; 525,540];%[320,340; 340,350; 350,355; 355,360; 360,380];
 B_interval_list = (E_interval_list - min(B_map(:)))/(max(B_map(:))-min(B_map(:)));
 
 pre_filter = cat(1,[]);
