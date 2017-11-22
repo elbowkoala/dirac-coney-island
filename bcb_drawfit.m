@@ -11,13 +11,11 @@ end
 bad_DPI = find(DPI_big < 200);
 
 %%%%%PARAMS%%%%%%%%%%%%%%%%
-scan_is = [round(961*rand)];%, round(961*rand), round(961*rand), round(961*rand)];%(Neighbor_sites(12,14,31,31))';%round(961*rand);% [round(961*rand), round(961*rand), round(961*rand), round(961*rand)];
+scan_is = 1;% [round(961*rand)];%, round(961*rand), round(961*rand), round(961*rand)];%(Neighbor_sites(12,14,31,31))';%round(961*rand);% [round(961*rand), round(961*rand), round(961*rand), round(961*rand)];
 wannasee = 1;
 wannasee_B0Bs = 0;
 
 B0_range = [15:1:35];%1.0];%[1.3:.05:2.0];%[1.3:.1:2.5];%[0.5:.5:3.0];%[.6:.2:2];%[1.8];%[1,2,3];
-set_BCB_range = (size(draw_box,2)-padding/2-B0_range)*bin_E*pix2eV;
-disp(['Set BCB start range: ',num2str(set_BCB_range)])
 B_range =  [.055:.0025:.07];%[0:.002:.01];%[0,.05,.1];
 
 
@@ -37,6 +35,8 @@ K_0 = round(size(draw_box,1)/2);
 draw_x = (1:size(draw_box,1))';
 draw_x0 = draw_x - K_0;
 
+set_BCB_range = (size(draw_box,2)-padding/2-B0_range)*bin_E*pix2eV;
+disp(['Set BCB start range: ',num2str(set_BCB_range)])
 B_range_eVA = B_range * (bin_E/bin_k) * .8107;
 
 %corrspread_TH = 0.95;
@@ -145,6 +145,7 @@ for B0_i = 1:length(B0_range)
     end
 end
 disp('Finished drawing templates; '), toc
+
 
 for i = scan_is  
     for NO = 150%[150,200,250]
@@ -284,7 +285,7 @@ for i = scan_is
                     subplot(2,2,2),
                     imagesc((1:size(corr_IT,1)),fliplr(1:size(corr_IT,2)),rot90(corr_IT,1)), axis xy, hold on
                     plot(corrmax_row_it,corrmax_col_it,'r+'), hold off
-                    title({['spread=',num2str(BCB_corrspreads(i))];['maxC=',num2str(BCB_corrs(i))]})
+                    %title({['spread=',num2str(BCB_corrspreads(i))];['maxC=',num2str(BCB_corrs(i))]})
 
                     subplot(2,2,3), 
                     %imagesc((1:size(f_image,1)),fliplr(1:size(f_image,2)),rot90(f_image,1)), axis xy

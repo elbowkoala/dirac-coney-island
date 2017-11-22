@@ -34,7 +34,7 @@ scan_errors = zeros(1,961);
 
 
 tic;
-for i = 1:961%254%round(961*rand)
+for i = 1:961%round(961*rand)
 	if ismember(i, bad_DPI) == 1
         disp(['Scan ',num2str(i),' is bad DPI']);
         continue
@@ -45,18 +45,18 @@ for i = 1:961%254%round(961*rand)
         
         cone = result1i(:,:,i);
         ss = imgaussfilt(cone,bcb_sigma);   
-        ss(ss>(mean(ss(:))+3*std(ss(:)))) = mean(ss(:))+3*std(ss(:));
+        ss(ss>(mean(ss(:))+1.5*std(ss(:)))) = mean(ss(:))+1.5*std(ss(:));
         ssK = kLOS(i);%rfc_ks_after(i);
         sss = 1000*sum( ss(ssK-ssKpm : ssK+ssKpm,:));
-        smin = find(sss(:,400:550)==min(sss(:,400:550)));
+        smin = 399+find(sss(:,400:550)==min(sss(:,400:550)));
         
-        y_y = sss(smin+399-bcbmarj:end);
+        y_y = sss(smin-bcbmarj:end);
         x_x = [1:length(y_y)];
-        FL_param = rfc_FL_Es(i) - (smin+399-bcbmarj);
+        FL_param = rfc_FL_Es(i) - (smin-bcbmarj);
         
         SS_tot = sum((y_y-mean(y_y)).^2);
         %a1 = bcbmarj+10;%find(y_y(bcbmarj:bcbmarj+50) == max(y_y(bcbmarj:bcbmarj+50)));
-        a2 = sss(smin+399);
+        a2 = sss(smin);
         a3 = max(y_y)-a2;
         a4 = 0;
 
@@ -75,7 +75,7 @@ for i = 1:961%254%round(961*rand)
         end
         best_a1_n = find(a1_Rs==max(a1_Rs));
         afinal = a1_trials(:,best_a1_n)';
-        bcb_find = smin + 399 - bcbmarj + afinal(1);
+        bcb_find = smin - bcbmarj + afinal(1);
 
         y_fit = zeros(size(x_x));
         y_fit(1:afinal(1)) = afinal(2)^2;
@@ -86,7 +86,7 @@ for i = 1:961%254%round(961*rand)
         %final_bcb_params(:,i) = afinal';
         final_bcb_Rsquareds(i) = R_squared;
         
-        dos_start = 199+find(sss(200:250)==max(sss(200:250)));%round(pre_dos_Es(i)-150);
+        dos_start = 199+find(sss(200:250)==max(sss(200:250)),1,'last');%round(pre_dos_Es(i)-150);
         dos_end = round(bcb_finds(i));%min([500,round(bcb_finds(i))]);
         
         %%Now use found bcb to do DOS fit%%
@@ -164,8 +164,8 @@ for i = 1:961%254%round(961*rand)
         if wannasee == 1
             figure,
             subplot(2,2,1), plot(kLOS_Rsquareds)
-            plot(x_x+smin+399-bcbmarj,y_y,'k'), hold on;
-            plot(x_x+smin+399-bcbmarj,y_fit,'r'), hold off;
+            plot(x_x+smin-bcbmarj,y_y,'k'), hold on;
+            plot(x_x+smin-bcbmarj,y_fit,'r'), hold off;
             xlim([0,size(ss,2)])
             title(['BCB=',num2str(bcb_finds(i))])
 
@@ -199,8 +199,8 @@ for i = 1:961%254%round(961*rand)
 %             figure,
 %             subplot(2,2,1)
 %             plot((1:length(sss)), sss, 'k'), hold on;%,(YY+i-400),'k'), hold on;
-%             plot(smin+399,sss(smin+399),'r*'), hold on;
-%             plot((x_x+smin+399-bcbmarj), y_fit, 'r'), hold off
+%             plot(smin,sss(smin),'r*'), hold on;
+%             plot((x_x+smin-bcbmarj), y_fit, 'r'), hold off
 %             xlim([1,size(ss,2)])
 %             title(['Rsq=',num2str(R_squared)])
 % 
@@ -211,7 +211,7 @@ for i = 1:961%254%round(961*rand)
 %             %imagesc(imgaussfilt(cones(:,:,i),5)), axis xy, hold on;
 %             %imagesc(imgaussfilt(cones(:,:,i),bcb_sigma)), axis xy, hold on;
 %             %plot([BCB_Es(i),BCB_Es(i)],[1,size(ss,1)],'r'), hold on;
-%             %plot([smin+399-bcbmarj+afinal(1),smin+399-bcbmarj+afinal(1)],[1,size(ss,1)],'w'), hold on;
+%             %plot([smin-bcbmarj+afinal(1),smin-bcbmarj+afinal(1)],[1,size(ss,1)],'w'), hold on;
 %             %plot(dos_E,kLOS(i),'w*'), hold on;
 %             plot([500,500],[1,size(ss,1)],'w'), hold off;
 % 

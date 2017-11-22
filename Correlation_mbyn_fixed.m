@@ -1,8 +1,11 @@
-load rfc_big_scan_170927.mat;
-load rfc_FL_scan_170927.mat;
-load rfc_ncorr_scan_171019w.mat;
-load cones.mat;
-load pre_dos_Es;
+if load_data == 1  
+    load rfc_big_scan_170927.mat;
+    load rfc_FL_scan_170927.mat;
+    load rfc_ncorr_scan_171019w.mat;
+    load cones.mat;
+    load pre_dos_Es;
+    load kLOS_171122.mat;
+end
 
 table_title = 'pre\_dos\_E fit';
 dirac_Es = pre_dos_Es;%rfc_Es_after;   %input Energies vector (cone pixels)
@@ -25,7 +28,7 @@ pre_filter(2,:) = [220,440, DPI_big];
 %pre_filter(3,:) = [.8,1, rfc_corrs_after];
 
 figure
-allfiltered = reshape(B_map,1,961);
+allfiltered = ones(1,961);% reshape(B_map,1,961);
 for NN = 1:size(pre_filter,1)
     allfiltered(pre_filter(NN,3:end) < pre_filter(NN,1)) = 0;
     allfiltered(pre_filter(NN,3:end) > pre_filter(NN,2)) = 0;
@@ -68,7 +71,7 @@ for iii=1:size(region_list,1)
          [map_y, map_x] = ind2sub([31,31],jjj);
          map_regions(1,nnn,iii) = map_x;
          map_regions(2,nnn,iii) = map_y;
-         cone = cones(:,:,jjj);
+         cone = result1i(:,:,jjj);
          [E_coor, K_coor] = meshgrid(1:size(cone,2),1:size(cone,1));
          E_coor = E_coor - dirac_Es(jjj);  
          K_coor = K_coor - dirac_ks(jjj);  
