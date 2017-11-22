@@ -1,12 +1,13 @@
-load_data = 0;
+load_data = 1;
 if load_data == 1
     load 'cones.mat';
     load 'ssd_big_scan_171003.mat';
     load 'rfc_big_scan_170927.mat';
     load rfc_FL_scan_170927.mat;
     load rfc_ncorr_scan_171019w.mat;
-    load kLOS;
+    load kLOS_171122.mat;
     load pre_dos_Es;
+    load BCB_E_scan.mat;
     bad_DPI = find(DPI_big < 200);
 end
 
@@ -18,15 +19,14 @@ dos_k_cutoff = 90;
 ssKpm = 5;
 bcbmarj = 25;
 a1_range = [0:10:50];
-bcb_sigma = 10;
-dos_sigma = 5;
+bcb_sigma = 8;
+dos_sigma = 3;
 
 
 %final_bcb_params = zeros(4,961);
-%final_bcb_Rsquareds = zeros(1,961);
-%bcb_finds = zeros(1,961);
-
-final_dos_params = zeros(4,961);
+final_bcb_Rsquareds = zeros(1,961);
+bcb_finds = zeros(1,961);
+%final_dos_params = zeros(4,961);
 final_dos_Rsquareds = zeros(1,961);
 dos_Es = zeros(1,961);
 dos_Ks = zeros(1,961);
@@ -34,21 +34,22 @@ scan_errors = zeros(1,961);
 
 
 tic;
-for i = round(961*rand)
+for i = 1:961%254%round(961*rand)
 	if ismember(i, bad_DPI) == 1
         disp(['Scan ',num2str(i),' is bad DPI']);
         continue
     end 
     
-    %try 
+    try 
         %rfc_ncorr_scan
         
-        cone = cones(:,:,i);
+        cone = result1i(:,:,i);
         ss = imgaussfilt(cone,bcb_sigma);   
+        ss(ss>(mean(ss(:))+3*std(ss(:)))) = mean(ss(:))+3*std(ss(:));
         ssK = kLOS(i);%rfc_ks_after(i);
         sss = 1000*sum( ss(ssK-ssKpm : ssK+ssKpm,:));
         smin = find(sss(:,400:550)==min(sss(:,400:550)));
-        %{
+        
         y_y = sss(smin+399-bcbmarj:end);
         x_x = [1:length(y_y)];
         FL_param = rfc_FL_Es(i) - (smin+399-bcbmarj);
@@ -80,23 +81,24 @@ for i = round(961*rand)
         y_fit(1:afinal(1)) = afinal(2)^2;
         y_fit(afinal(1)+1:round(FL_param)) = afinal(2)^2+afinal(3)^2;
         y_fit(round(FL_param)+1:end) = afinal(4)^2;
-        %}
-        bcb_finds(i) = BCB_Es(i);%bcb_find;
-        final_bcb_params(:,i) = afinal';
+        
+        bcb_finds(i) = bcb_find;
+        %final_bcb_params(:,i) = afinal';
         final_bcb_Rsquareds(i) = R_squared;
         
-        dos_start = round(pre_dos_Es(i)-50);
+        dos_start = 199+find(sss(200:250)==max(sss(200:250)));%round(pre_dos_Es(i)-150);
         dos_end = round(bcb_finds(i));%min([500,round(bcb_finds(i))]);
         
         %%Now use found bcb to do DOS fit%%
-        ssKs = ssK + [-16:2:16];
+        ssKs = ssK + [-10:1:10];
         kLOS_Rsquareds = zeros(size(ssKs));
         kLOS_intercepts = zeros(size(ssKs));
         kLOS_y__fit = zeros(length(ssKs),(dos_end-dos_start+1));
         kLOS_params = zeros(length(ssKs),4);
-        for ssK_i = 1:length(ssKs)
+        for ssK_i = 1%:length(ssKs)
             
-            kwts = abs([1:size(ss,1)]-ssKs(ssK_i));
+            %kwts = abs([1:size(ss,1)]-ssKs(ssK_i));
+            kwts = abs([1:size(ss,1)]-ssK);
             kwts(kwts>dos_k_cutoff) = 0;
             DOS = sum(repmat(kwts, size(ss,2), 1)' .*imgaussfilt(cone,dos_sigma));
 
@@ -143,31 +145,17 @@ for i = round(961*rand)
             title(['kLOS=',num2str(ssKs(ssK_i))])
             %}
         end
-        max_kLOS_i = find(kLOS_Rsquareds==max(kLOS_Rsquareds));
-        
-        dos_K = ssKs(max_kLOS_i);
-        dos_E = kLOS_intercepts(max_kLOS_i) + dos_start - 1; 
+        %max_kLOS_i = find(kLOS_Rsquareds==max(kLOS_Rsquareds));
+        max_kLOS_i = 1;
+        %dos_K = ssKs(max_kLOS_i);
+        dos_K = ssK;
+        %dos_E = kLOS_intercepts(max_kLOS_i) + dos_start - 1; 
+        dos_E = kLOS_intercepts(1)+dos_start-1;
         
         dos_Es(i) = dos_E;
         dos_Ks(i) = dos_K; 
-        final_dos_params(:,i) = bfinal';
-        final_dos_Rsquareds(i) = R__squared;
-        
-        figure,
-        subplot(2,2,1), plot(kLOS_Rsquareds)
-        
-        subplot(2,2,2),
-        plot(x__x, y__y,'k'), hold on;
-        plot(x__x, y__fit, 'r'), hold off;
-        title(['E=',num2str(round(dos_E,2)),'  Rsq=',num2str(round(R__squared,4))])
-            
-        
-        subplot(2,2,3), imagesc(ss), axis xy, hold on;
-        plot([0,size(ss,2)],[kLOS(i),kLOS(i)],'w'), hold on;
-        plot(pre_dos_Es(i),kLOS(i),'w*'), hold on;
-        plot([0,size(ss,2)],[dos_K,dos_K],'r'), hold on;
-        plot(dos_Es(i), dos_Ks(i), 'r*'), hold off;
-        
+        final_dos_params(:,i) = kLOS_params(max_kLOS_i,:)';
+        final_dos_Rsquareds(i) = kLOS_Rsquareds(max_kLOS_i);
         
         
         
@@ -175,35 +163,70 @@ for i = round(961*rand)
 
         if wannasee == 1
             figure,
-            subplot(2,2,1)
-            plot((1:length(sss)), sss, 'k'), hold on;%,(YY+i-400),'k'), hold on;
-            plot(smin+399,sss(smin+399),'r*'), hold on;
-            plot((x_x+smin+399-bcbmarj), y_fit, 'r'), hold off
-            xlim([1,size(ss,2)])
-            title(['Rsq=',num2str(R_squared)])
+            subplot(2,2,1), plot(kLOS_Rsquareds)
+            plot(x_x+smin+399-bcbmarj,y_y,'k'), hold on;
+            plot(x_x+smin+399-bcbmarj,y_fit,'r'), hold off;
+            xlim([0,size(ss,2)])
+            title(['BCB=',num2str(bcb_finds(i))])
 
-            subplot(2,2,2), plot(DOS)
-            title(['BCB=',num2str(bcb_find)])
+    %         subplot(2,2,2),
+    %         plot(x__x, y__y,'k'), hold on;
+    %         plot(x__x, [kLOS_y__fit(round(length(ssKs)/2),:)], 'r'), hold off;
+    %         title(['preE=',num2str(round(pre_dos_Es(i),2)),'  Rsq=',num2str(kLOS_Rsquareds(round(length(ssKs)/2)))])
+    %             
+            subplot(2,2,3), imagesc(ss), axis xy, hold on;
+            %plot([0,size(ss,2)],[kLOS(i),kLOS(i)],'w'), hold on;
+            plot([bcb_finds(i),bcb_finds(i)],[1,size(ss,1)],'w'), hold on;
+            plot(dos_Es(i), dos_Ks(i), 'r*'), hold off;
+            title(['DPI=',num2str(round(DPI_big(i)))])
 
-            subplot(2,2,3)
-            %imagesc(imgaussfilt(cones(:,:,i),5)), axis xy, hold on;
-            imagesc(imgaussfilt(cones(:,:,i),bcb_sigma)), axis xy, hold on;
-            plot([BCB_Es(i),BCB_Es(i)],[1,size(ss,1)],'r'), hold on;
-            plot([smin+399-bcbmarj+afinal(1),smin+399-bcbmarj+afinal(1)],[1,size(ss,1)],'w'), hold on;
-            plot(dos_E,kLOS(i),'w*'), hold off
+            %plot([0,size(ss,2)],[dos_K,dos_K],'r'), hold on;
+
+            subplot(2,2,2),
+            plot(x__x, y__y,'k'), hold on;
+            plot(x__x, [kLOS_y__fit(max_kLOS_i,:)], 'r'), hold off;
+            title(['E=',num2str(round(dos_E,2)),'  Rsq=',num2str(round(final_dos_Rsquareds(i),3))])
 
             subplot(2,2,4)
-            plot(x__x, y__y,'k'), hold on;
-            plot(x__x, y__fit, 'r'), hold off;
-            title(['E=',num2str(round(dos_E,2)),'  Rsq=',num2str(round(R__squared,2))])
+            imagesc(imgaussfilt(cones(:,:,i),5)), axis xy, hold on;
+            plot(pre_dos_Es(i),kLOS(i),'w*'), hold on;
+            plot(dos_Es(i), dos_Ks(i), 'r*'), hold on;
+            plot([bcb_finds(i),bcb_finds(i)],[1,size(ss,1)],'w'), hold off;
 
-            suptitle(['i=',num2str(i),'   DPI=',num2str(DPI_big(i))])
-            %figure, imagesc(ss), axis xy, title(['i=',num2str(i),' used for bcb fit'])
+            suptitle(['i=',num2str(i)])
+
+            
+%             figure,
+%             subplot(2,2,1)
+%             plot((1:length(sss)), sss, 'k'), hold on;%,(YY+i-400),'k'), hold on;
+%             plot(smin+399,sss(smin+399),'r*'), hold on;
+%             plot((x_x+smin+399-bcbmarj), y_fit, 'r'), hold off
+%             xlim([1,size(ss,2)])
+%             title(['Rsq=',num2str(R_squared)])
+% 
+%             subplot(2,2,2), plot(DOS)
+%             title(['BCB=',num2str(bcb_find)])
+% 
+%             subplot(2,2,3)
+%             %imagesc(imgaussfilt(cones(:,:,i),5)), axis xy, hold on;
+%             %imagesc(imgaussfilt(cones(:,:,i),bcb_sigma)), axis xy, hold on;
+%             %plot([BCB_Es(i),BCB_Es(i)],[1,size(ss,1)],'r'), hold on;
+%             %plot([smin+399-bcbmarj+afinal(1),smin+399-bcbmarj+afinal(1)],[1,size(ss,1)],'w'), hold on;
+%             %plot(dos_E,kLOS(i),'w*'), hold on;
+%             plot([500,500],[1,size(ss,1)],'w'), hold off;
+% 
+%             subplot(2,2,4)
+%             plot(x__x, y__y,'k'), hold on;
+%             plot(x__x, y__fit, 'r'), hold off;
+%             title(['E=',num2str(round(dos_E,2)),'  Rsq=',num2str(round(R__squared,2))])
+% 
+%             suptitle(['i=',num2str(i),'   DPI=',num2str(DPI_big(i))])
+%             %figure, imagesc(ss), axis xy, title(['i=',num2str(i),' used for bcb fit'])
         end
         
-%     catch ME
-%         disp('Error occured with scan '); disp(i)
-%         scan_errors(i) = 1;
-%     end
+    catch ME
+        disp('Error occured with scan '); disp(i)
+        scan_errors(i) = 1;
+    end
 end
 toc

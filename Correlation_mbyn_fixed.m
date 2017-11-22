@@ -6,7 +6,7 @@ load pre_dos_Es;
 
 table_title = 'pre\_dos\_E fit';
 dirac_Es = pre_dos_Es;%rfc_Es_after;   %input Energies vector (cone pixels)
-dirac_ks = .5*(rfc_ks_after+kLOS);   %input mtm vector (cone pixels)
+dirac_ks = kLOS;   %input mtm vector (cone pixels)
 EV_map = reshape(((rfc_FL_Es - dirac_Es) * pix2eV),31,31);
 
 

@@ -4,14 +4,15 @@ scone_sigma = 8;
 
 tic
 
-%kLOS = zeros(1,961);
-for i = 2%[round(961*rand),round(961*rand),round(961*rand),round(961*rand),round(961*rand), round(961*rand)]%1:1:num_scans;  
+kLOS_sat = zeros(1,961);
+for i = [round(961*rand),round(961*rand),round(961*rand),round(961*rand),round(961*rand), round(961*rand)]%1:1:num_scans;  
     if rem(i,100) == 0
         disp(['Now on scan ',num2str(i), ';  time: ',num2str(toc)])
     end
     cone = cones(:,:,i); 
-    scone = scone(:,round(2*dos_Es(i)-BCB_Es(i)):round(BCB_Es(i)));
+    scone = cone(:,round(2*pre_dos_Es(i)-BCB_Es(i)):round(BCB_Es(i)));
     scone = imgaussfilt(scone, scone_sigma);
+    scone(scone>(mean(scone(:))+2*std(scone(:)))) = mean(scone(:))+2*std(scone(:));
 
     klosrange = (100:250);
     normcorr = zeros(1,length(klosrange));
@@ -28,11 +29,11 @@ for i = 2%[round(961*rand),round(961*rand),round(961*rand),round(961*rand),round
         krow_n = krow_n+1;
     end
     
-    kLOS(i) = klosrange(1) + find(normcorr==max(normcorr)) -1;
+    kLOS_sat(i) = klosrange(1) + find(normcorr==max(normcorr)) -1;
     
     if wannasee == 1
         figure, imagesc(imgaussfilt(cone,scone_sigma)), axis xy, hold on;
-        plot([0,size(scone,2)],[kLOS(i),kLOS(i)],'w'), hold off
+        plot([0,size(cone,2)],[kLOS_sat(i),kLOS_sat(i)],'w'), hold off
     end
     
 end

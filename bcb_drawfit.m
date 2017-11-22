@@ -2,7 +2,7 @@ tic;
 load_data = 0;
 if load_data == 1 
     load 'cones.mat'
-    load 'kLOS.mat'
+    load 'kLOS_171122.mat'
     load 'rfc_big_scan_170927.mat';
     load 'cones55555.mat';
     load rfc_FL_scan_170927.mat;
@@ -11,43 +11,44 @@ end
 bad_DPI = find(DPI_big < 200);
 
 %%%%%PARAMS%%%%%%%%%%%%%%%%
-scan_is = 1:961;%[round(961*rand), round(961*rand), round(961*rand), round(961*rand)];%(Neighbor_sites(12,14,31,31))';%round(961*rand);% [round(961*rand), round(961*rand), round(961*rand), round(961*rand)];
-wannasee = 0;
+scan_is = [round(961*rand)];%, round(961*rand), round(961*rand), round(961*rand)];%(Neighbor_sites(12,14,31,31))';%round(961*rand);% [round(961*rand), round(961*rand), round(961*rand), round(961*rand)];
+wannasee = 1;
 wannasee_B0Bs = 0;
+
+B0_range = [15:1:35];%1.0];%[1.3:.05:2.0];%[1.3:.1:2.5];%[0.5:.5:3.0];%[.6:.2:2];%[1.8];%[1,2,3];
+set_BCB_range = (size(draw_box,2)-padding/2-B0_range)*bin_E*pix2eV;
+disp(['Set BCB start range: ',num2str(set_BCB_range)])
+B_range =  [.055:.0025:.07];%[0:.002:.01];%[0,.05,.1];
+
 
 bin_E = 5;
 bin_k = 2;
 
-fass_sigma = 7;
-bcb_sigma = 10;
+fass_sigma = 5;
+%bcb_sigma = 10; set manually in code, 
 ssKw = 5;
 
-IT_sigma = 2.5;
+IT_sigma = 3;
 LineWidth = 1;
 
 padding = 2*5;
-draw_box = zeros([81+padding],[35+padding]);
-E_0 = 40 + padding/2;
+draw_box = zeros([81+padding],[45+padding]);
 K_0 = round(size(draw_box,1)/2);
 draw_x = (1:size(draw_box,1))';
 draw_x0 = draw_x - K_0;
 
-B0_range = [10:1:30];%1.0];%[1.3:.05:2.0];%[1.3:.1:2.5];%[0.5:.5:3.0];%[.6:.2:2];%[1.8];%[1,2,3];
-B_range =  [.02:.005:.15];%[0:.002:.01];%[0,.05,.1];
-
-%A_range_eVA = B0_range * (bin_E/bin_k) * .8107;
 B_range_eVA = B_range * (bin_E/bin_k) * .8107;
 
-corrspread_TH = 0.95;
+%corrspread_TH = 0.95;
 %%%%%%%%%%%%%%%%%%%%
-
+%{
 BCB_Es = zeros(1,num_scans);
 BCB_ks = zeros(1,num_scans);
 BCB_B0s = zeros(1,num_scans);
 BCB_Bs = zeros(1,num_scans);
 BCB_corrs = zeros(1,num_scans);
 BCB_corrspreads = zeros(1,num_scans);
-
+%}
 
 %First draw all the A,B templates%%%
 B0B_ITs = zeros(size(draw_box,1)-padding,size(draw_box,2)-padding,length(B0_range)*length(B_range));
@@ -59,13 +60,16 @@ end
 for B0_i = 1:length(B0_range)
     B0 = B0_range(B0_i);
     for B_i = 1:length(B_range)
+        
         B = B_range(B_i);
-
-        draw_yp = B*((draw_x0).^2) + B0;
+%         if (B0 == 23) && (B == .025)
+%             disp(B0B_IT_i)
+%         end
+        draw_yp = B*((draw_x0).^2) + B0 + padding/2;
 
         draw_itp = horzcat(draw_yp,draw_x);
 
-        draw_itp_curt = draw_itp(max(1,round(-B0/(2*B)+K_0)):end,:);
+        %draw_itp_curt = draw_itp(max(1,round(-B0/(2*B)+K_0)):end,:);
         draw_itp_curt = draw_itp;
         
         draw_itp_it = reshape(draw_itp_curt',1,[]);
@@ -143,174 +147,188 @@ end
 disp('Finished drawing templates; '), toc
 
 for i = scan_is  
-    if ismember(i, bad_DPI) == 1
-        disp(['Scan ',num2str(i),' is bad DPI']);
-        continue
-    end 
-    
-    if rem(i,50) == 0
-        disp(['Starting scan #',num2str(i)]), toc
-    end
-    
-    try 
-        scone = cones(:,:,i);
-        scone_f = imgaussfilt(scone,fass_sigma);   
-        scone_bf = Binning_2d(scone_f, bin_E, bin_k);  
-        IT4size = size(B0B_ITs(:,:,1));
-        b_k_1 = round(kLOS(i)/bin_k - IT4size(1)/2-3);
-        b_k_2 = round(kLOS(i)/bin_k+ IT4size(1)/2+3);
-        
-        ss = imgaussfilt(scone, bcb_sigma);
-        ssK = kLOS(i);
-        sss = sum( ss(ssK-ssKw : ssK+ssKw,:));
-        smin = 399+ find(sss(:,400:550)==min(sss(:,400:550)));
-        
-        b_E_2 = round(rfc_FL_Es(i)/bin_E + bin_E/2);
-        b_E_1 =  min([round(smin/bin_E + bin_E/2), b_E_2-IT4size(2)]) ;%round(rfc_FL_Es(i)/bin_E + bin_E/2)-50;
-
-        scone_bfc = scone_bf(b_k_1:b_k_2, b_E_1:b_E_2);
-        fass = scone_bfc; 
-        fass_g = mat2gray(fass);
-        %fass_gm = fass_g - mean(fass_g(:));
-        fass_gg = fass_g;
-        %fass_gg(fass_gg>(mean(fass_g(:))+.7*std(fass_g(:)))) = mean(fass_g(:))+.7*std(fass_g(:));
-        %f_image = fass_gg ; 
-        
-        midwgt = [1:size(fass_gg,1)];
-        L = length(midwgt);
-        midwgtz = zeros(size(midwgt));
-        midwgtz(round(L/2)+1:end) = fliplr([(L-1):-2:1]);
-        midweight = (midwgt - midwgtz);
-        midweights = repmat(midweight',1,size(fass_gg,2));
-        
-        f_image = fass_gg .* midweights;
-        
-        %figure, subplot(1,2,1), imagesc(f_image), axis xy, title(['i=',num2str(i)])
-        %subplot(1,2,2), imagesc(f_image.*midweights), axis xy, 
-        
-        %figure, imagesc(scone_bfc), axis xy
-
-        tempsize = size(B0B_ITs(:,:,1));
-        B0B_corr_table = zeros([length(B0_range),length(B_range)]);  
-        corr_IT = zeros([(size(f_image,1)-tempsize(1)+1),(size(f_image,2)-tempsize(2)+1)]);
-
-        for B0B_IT_i = 1:(length(B0_range)*length(B_range))
-            B0_i = ceil(B0B_IT_i / length(B_range));
-            B_i = B0B_IT_i - (B0_i-1)*length(B_range);
-            B0 = B0_range(B0_i);
-            B = B_range(B_i);
-
-            IT_template = B0B_ITs(:,:,B0B_IT_i);
-            %IT_mid = IT_template(round(size(IT_template,1)/2),:);
-            %IT_weight = 1;%/(1-0.004*(size(IT_template,1) - find(IT_mid == max(IT_mid))));
-
-            
-            
-            corr = zeros(size(corr_IT));    
-            N = size(IT_template,1);
-            M = size(IT_template,2);
-            for x = 1:(size(f_image,2) - size(IT_template,2) +1) 
-                for y = 1:(size(f_image,1) - size(IT_template,1) +1)  
-                    f_image_under = f_image(y:y+N-1, x:x+M-1);
-                    corr(y,x) =  sum(nansum( IT_template .* f_image_under ))/(1-.0005*sum(nansum(IT_template)));
-                end
-            end
-            [corrmax_row,corrmax_col] = find(corr==max(corr(:)));
-            B0B_corr_table(B0_i,B_i) = (1+.0055*(size(IT_template,2)-B0))*max(corr(:));
-            %{
-            if (size(f_image,1) - size(IT_template,1) ~= 0) || (size(f_image,2)-size(IT_template,2) ~= 0)
-                disp('Make template and image same size or reinstate corr scan')
-            end
-                
-            B0B_corr_table(B0_i,B_i) = IT_weight*sum(nansum(IT_template .* f_image))/sum(nansum(IT_template));
-            %}
-            
-            if B0B_corr_table(B0_i,B_i) == max(B0B_corr_table(:))
-                corr_IT = corr;
-                B0_i_it = B0_i;
-                B_i_it = B_i;
-                B0B_IT_i_it = B0B_IT_i;
+    for NO = 150%[150,200,250]
+        for MWO = [100]
+            if ismember(i, bad_DPI) == 1
+                disp(['Scan ',num2str(i),' is bad DPI']);
+                continue
             end 
-            %}
+
+            if rem(i,50) == 0
+                disp(['Starting scan #',num2str(i)]), toc
+            end
+
+           % try 
+                scone = result1i(:,:,i);
+                scone_f = imgaussfilt(scone,fass_sigma);   
+                scone_bf = Binning_2d(scone_f, bin_E, bin_k);  
+                IT4size = size(B0B_ITs(:,:,1));
+                b_k_1 = round(kLOS(i)/bin_k - IT4size(1)/2-15);
+                b_k_2 = round(kLOS(i)/bin_k+ IT4size(1)/2+15);
+
+                ss = imgaussfilt(scone, 10);
+                ssK = kLOS(i);
+                sss = sum( ss(ssK-ssKw : ssK+ssKw,:));
+                smin = 399+ find(sss(:,400:550)==min(sss(:,400:550)));
+
+                b_E_2 = round(rfc_FL_Es(i)/bin_E + bin_E/2);
+                b_E_1 =  min([round(smin/bin_E + bin_E/2), b_E_2-IT4size(2)]) ;%round(rfc_FL_Es(i)/bin_E + bin_E/2)-50;
+
+                scone_bfc = scone_bf(b_k_1:b_k_2, b_E_1:b_E_2);
+                fass = scone_bfc; 
+                fass_gg = mat2gray(fass);
+                fass_gg(fass_gg>(mean(fass_gg(:))+2*std(fass_gg(:)))) = mean(fass_gg(:))+2*std(fass_gg(:));
+
+                midwgt = [1:size(fass_gg,1)];
+                L = length(midwgt);
+                midwgtz = zeros(size(midwgt));
+                midwgtz(round(L/2)+1:end) = fliplr([(L-1):-2:1]);
+                midweight = MWO+(midwgt - midwgtz);
+                midweights = repmat(midweight',1,size(fass_gg,2));
+
+                f_image = fass_gg .* midweights;
+
+                %figure, subplot(1,2,1), imagesc(f_image), axis xy, title(['i=',num2str(i)])
+                %subplot(1,2,2), imagesc(f_image.*midweights), axis xy, 
+
+                %figure, imagesc(scone_bfc), axis xy
+
+                tempsize = size(B0B_ITs(:,:,1));
+                B0B_corr_table = zeros([length(B0_range),length(B_range)]);  
+                corr_IT = zeros([(size(f_image,1)-tempsize(1)+1),(size(f_image,2)-tempsize(2)+1)]);
+
+                for B0B_IT_i = 1:(length(B0_range)*length(B_range))
+                    B0_i = ceil(B0B_IT_i / length(B_range));
+                    B_i = B0B_IT_i - (B0_i-1)*length(B_range);
+                    B0 = B0_range(B0_i);
+                    B = B_range(B_i);
+
+                    IT_template = B0B_ITs(:,:,B0B_IT_i);
+                    %IT_mid = IT_template(round(size(IT_template,1)/2),:);
+                    %IT_weight = 1;%/(1-0.004*(size(IT_template,1) - find(IT_mid == max(IT_mid))));
+
+
+
+                    corr = zeros(size(corr_IT));    
+                    N = size(IT_template,1);
+                    M = size(IT_template,2);
+                    for x = 1:(size(f_image,2) - size(IT_template,2) +1) 
+                        for y = 1:(size(f_image,1) - size(IT_template,1) +1)  
+                            f_image_under = f_image(y:y+N-1, x:x+M-1);
+                            corr(y,x) =  sum(nansum( IT_template .* f_image_under ))/(NO+length(find(IT_template>.5)));%((1-.0005*sum(nansum(IT_template)));
+                        end
+                    end
+                    [corrmax_row,corrmax_col] = find(corr==max(corr(:)));
+                    B0B_corr_table(B0_i,B_i) = (1+.00*(size(IT_template,2)-B0))*max(corr(:));
+                    %{
+                    if (size(f_image,1) - size(IT_template,1) ~= 0) || (size(f_image,2)-size(IT_template,2) ~= 0)
+                        disp('Make template and image same size or reinstate corr scan')
+                    end
+
+                    B0B_corr_table(B0_i,B_i) = IT_weight*sum(nansum(IT_template .* f_image))/sum(nansum(IT_template));
+                    %}
+
+                    if B0B_corr_table(B0_i,B_i) == max(B0B_corr_table(:))
+                        corr_IT = corr;
+                        B0_i_it = B0_i;
+                        B_i_it = B_i;
+                        B0B_IT_i_it = B0B_IT_i;
+                    end 
+                    %}
+                end
+
+                [corrmax_row_it,corrmax_col_it] = find(corr_IT==max(corr_IT(:)));
+
+
+                %[B0_i_it,B_i_it] = find(B0B_corr_table==max(B0B_corr_table(:)));
+                %B0B_IT_i_it = (B0_i_it-1)*length(B0_range) + B_i_it;
+
+                marker = B0B_ITs(:,:,B0B_IT_i_it);
+                marker = marker(round(size(marker,1)/2),:);
+                marker = find(marker>.5,1,'first');
+                BCB_E_b = corrmax_col_it + b_E_1 + marker -1; 
+
+                %corr_ITg = (corr_IT - min(corr_IT(:)))/(max(corr_IT(:))-min(corr_IT(:)));
+                %corrspread = length(find(corr_ITg > corrspread_TH));
+
+                %DPE_b = B0_range(B0_i_it) + b_E_1 - 1;% + corrmax_col_it-1;
+                BCBK_b = K_0 + b_k_1 - 1+ corrmax_row_it - 1;
+                %DPE_pix = (DPE_b * bin_E) + bin_E/2;
+                BCBK_pix = (BCBK_b* bin_k) + bin_k/2;
+
+                BCB_Es(i) = BCB_E_b*bin_E + bin_E/2;
+                BCB_ks(i) = BCBK_pix;
+                BCB_B0s(i) = B0_range(B0_i_it);
+                BCB_Bs(i) = B_range(B_i_it);
+                BCB_corrs(i) = max(B0B_corr_table(:));
+            %BCB_corrspreads(i) = corrspread;
+
+            %figure, subplot(1,2,1), imagesc(f_image), axis xy, subplot(1,2,2), imagesc(overlay), axis xy
+
+
+                if wannasee == 1
+                    
+                    %overlay = zeros(size(f_image));
+                    overlay = zeros(size(scone_bf));
+                    overlay((1:size(IT_template,1))+corrmax_row_it-1+b_k_1-1,(1:size(IT_template,2))+corrmax_col_it -1 + b_E_1-1) = B0B_ITs(:,:,B0B_IT_i_it);
+                    %overlay((1:size(IT_template,1))+b_k_1-1,(1:size(IT_template,2))+ b_E_1-1) = B0B_ITs(:,:,B0B_IT_i_it);
+
+                    %overlay(isnan(overlay)) = -.1;
+                    
+                    figure('position', [500, 100, 400, 500])
+                    subplot(2,2,1), 
+                    imagesc(B_range,B0_range,B0B_corr_table), axis xy, hold on %title('AB\_corr\_table'), 
+                    plot(B_range(B_i_it),B0_range(B0_i_it),'r+'), hold off
+                    title(['A=',num2str(B0_range(B0_i_it)),' B=',num2str(B_range(B_i_it))])
+
+                    subplot(2,2,2),
+                    imagesc((1:size(corr_IT,1)),fliplr(1:size(corr_IT,2)),rot90(corr_IT,1)), axis xy, hold on
+                    plot(corrmax_row_it,corrmax_col_it,'r+'), hold off
+                    title({['spread=',num2str(BCB_corrspreads(i))];['maxC=',num2str(BCB_corrs(i))]})
+
+                    subplot(2,2,3), 
+                    %imagesc((1:size(f_image,1)),fliplr(1:size(f_image,2)),rot90(f_image,1)), axis xy
+                    imagesc(scone_bf'), axis xy, hold on;
+
+                    %plot([1,size(scone_bf,1)],b_E_1+corrmax_col_it-1 + [marker,marker],'r'), hold on
+                    plot([1,size(scone_bf,1)],[BCB_E_b,BCB_E_b],'r'), hold on
+                    plot([1,size(scone_bf,1)],[(bcb_finds(i)/bin_E + bin_E/2), (bcb_finds(i)/bin_E + bin_E/2)],'c'), hold on;
+                    plot([1,size(scone_bf,1)], [b_E_1,b_E_1],'w-'), hold off
+                    title(['DPI=',num2str(round(DPI_big(i)))])
+
+                   % figure, imagesc(imgaussfilt(result1i(:,:,i),5)), axis xy, hold on;
+                   % plot([b_E_
+                    %subplot(2,2,4), imagesc((1:size(f_image,1)),fliplr(1:size(f_image,2)),rot90(f_image+.5*overlay,1)), axis xy, hold on;
+                    %plot([1,size(IT_template,1),size(IT_template,1),1,1]+corrmax_row_it-1,[1,1,size(IT_template,2),size(IT_template,2),1]+corrmax_col_it-1,'w'), hold off;
+                    %subplot(2,2,4), imagesc((1:size(scone_bf,1)),fliplr(1:size(scone_bf,2)),rot90(scone_bf+5*overlay,1)), axis xy, hold on;
+                    subplot(2,2,4), imagesc((1:size(scone_bf,1)),fliplr(1:size(scone_bf,2)),rot90(scone_bf,1)), axis xy, hold on;
+                    [asdff, asdfff] = find(B0B_ITs(:,:,B0B_IT_i_it)==1);
+                    plot([asdff]+corrmax_row_it-1+b_k_1-1,[asdfff]+corrmax_col_it-1+b_E_1-1,'w.'), hold off;
+
+                    %plot([1,size(IT_template,1),size(IT_template,1),1,1]+corrmax_row_it-1+b_k_1-1,[1,1,size(IT_template,2),size(IT_template,2),1]+corrmax_col_it-1+b_E_1-1,'w'), hold off;
+                    title(['BCBE=',num2str(BCB_E_b),' BCBK=',num2str(BCBK_pix)])
+
+                    suptitle(['i=',num2str(i),' NO=',num2str(NO),' MWO=',num2str(MWO)])
+
+                    figure, imagesc(imgaussfilt(result1i(:,:,i),5)), axis xy, hold on;
+                    %plot([asdfff]*bin_E+bin_E/2,[asdff]*bin_k+bin_k/2,'w.'), hold on;
+                    plot(([asdfff]+corrmax_col_it-1+b_E_1-1)*bin_E+bin_E/2,([asdff]+corrmax_row_it-1+b_k_1-1)*bin_k+bin_k/2,'w.'), hold on;
+                    plot([BCB_Es(i),BCB_Es(i)],[1,size(result1i(:,:,i),1)],'w'), hold off;
+                    title(['i=',num2str(i),' BCBE=',num2str(BCB_E_b)])
+                    pause(.001)
+                end
+
+%             catch ME
+%                 disp('Error occured with scan '); disp(i)
+%                 scan_errors(i) = 1;
+%             end
+
+%             disp(['Normalization offset=',num2str(NO),' E =',num2str(BCB_E_b),' Max corr=',num2str(BCB_corrs(i))]) 
+%             disp(['Midweights offset=',num2str(MWO),' E =',num2str(BCB_E_b),' Max corr=',num2str(BCB_corrs(i))])
+%             disp('     ')
         end
-        
-        [corrmax_row_it,corrmax_col_it] = find(corr_IT==max(corr_IT(:)));
-        
-        
-        %[B0_i_it,B_i_it] = find(B0B_corr_table==max(B0B_corr_table(:)));
-        %B0B_IT_i_it = (B0_i_it-1)*length(B0_range) + B_i_it;
-       
-        marker = B0B_ITs(:,:,B0B_IT_i_it);
-        marker = marker(round(size(marker,1)/2),:);
-        marker = find(marker>.5,1,'first');
-        BCB_E_b = corrmax_col_it + b_E_1 + marker -1; 
-        
-        %corr_ITg = (corr_IT - min(corr_IT(:)))/(max(corr_IT(:))-min(corr_IT(:)));
-        %corrspread = length(find(corr_ITg > corrspread_TH));
-
-        %DPE_b = B0_range(B0_i_it) + b_E_1 - 1;% + corrmax_col_it-1;
-        BCBK_b = K_0 + b_k_1 - 1+ corrmax_row_it - 1;
-        %DPE_pix = (DPE_b * bin_E) + bin_E/2;
-        BCBK_pix = (BCBK_b* bin_k) + bin_k/2;
-
-        BCB_Es(i) = BCB_E_b*bin_E + bin_E/2;
-        BCB_ks(i) = BCBK_pix;
-        BCB_B0s(i) = B0_range(B0_i_it);
-        BCB_Bs(i) = B_range(B_i_it);
-        BCB_corrs(i) = max(B0B_corr_table(:));
-        %BCB_corrspreads(i) = corrspread;
-
-        %figure, subplot(1,2,1), imagesc(f_image), axis xy, subplot(1,2,2), imagesc(overlay), axis xy
-
-
-        if wannasee == 1
-            %overlay = zeros(size(f_image));
-            overlay = zeros(size(scone_bf));
-            overlay((1:size(IT_template,1))+corrmax_row_it-1+b_k_1-1,(1:size(IT_template,2))+corrmax_col_it -1 + b_E_1-1) = B0B_ITs(:,:,B0B_IT_i_it);
-            %overlay((1:size(IT_template,1))+b_k_1-1,(1:size(IT_template,2))+ b_E_1-1) = B0B_ITs(:,:,B0B_IT_i_it);
-            
-            %overlay(isnan(overlay)) = -.1;
-
-            figure('position', [500, 100, 400, 500])
-            subplot(2,2,1), 
-            imagesc(B_range,B0_range,B0B_corr_table), axis xy, hold on %title('AB\_corr\_table'), 
-            plot(B_range(B_i_it),B0_range(B0_i_it),'r+'), hold off
-            title(['A=',num2str(B0_range(B0_i_it)),' B=',num2str(B_range(B_i_it))])
-
-            subplot(2,2,2),
-            imagesc((1:size(corr_IT,1)),fliplr(1:size(corr_IT,2)),rot90(corr_IT,1)), axis xy, hold on
-            plot(corrmax_row_it,corrmax_col_it,'r+'), hold off
-            title({['spread=',num2str(BCB_corrspreads(i))];['maxC=',num2str(BCB_corrs(i))]})
-
-            subplot(2,2,3), 
-            %imagesc((1:size(f_image,1)),fliplr(1:size(f_image,2)),rot90(f_image,1)), axis xy
-            imagesc(scone_bf'), axis xy, hold on;
-            
-            %plot([1,size(scone_bf,1)],b_E_1+corrmax_col_it-1 + [marker,marker],'r'), hold on
-            plot([1,size(scone_bf,1)],[BCB_E_b,BCB_E_b],'r'), hold on
-
-            plot([1,size(scone_bf,1)], [b_E_1,b_E_1],'w'), hold off
-            title(['DPI=',num2str(round(DPI_big(i)))])
-
-
-            %subplot(2,2,4), imagesc((1:size(f_image,1)),fliplr(1:size(f_image,2)),rot90(f_image+.5*overlay,1)), axis xy, hold on;
-            %plot([1,size(IT_template,1),size(IT_template,1),1,1]+corrmax_row_it-1,[1,1,size(IT_template,2),size(IT_template,2),1]+corrmax_col_it-1,'w'), hold off;
-            subplot(2,2,4), imagesc((1:size(scone_bf,1)),fliplr(1:size(scone_bf,2)),rot90(scone_bf+5*overlay,1)), axis xy, hold on;
-            plot([1,size(IT_template,1),size(IT_template,1),1,1]+corrmax_row_it-1+b_k_1-1,[1,1,size(IT_template,2),size(IT_template,2),1]+corrmax_col_it-1+b_E_1-1,'w'), hold off;
-            title(['BCBE=',num2str(BCB_E_b),' BCBK=',num2str(BCBK_pix)])
-
-            suptitle(['i=',num2str(i)])
-
-
-            pause(.001)
-        end
-    
-    catch ME
-        disp('Error occured with scan '); disp(i)
-        scan_errors(i) = 1;
-    end
-        
-end        
+    end    
+end
 
 
 toc;
