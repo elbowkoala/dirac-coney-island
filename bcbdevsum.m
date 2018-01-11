@@ -11,7 +11,7 @@ a(1) = round((a(1)));
 
 y_fit = zeros(size(x_x));
 y_fit(1:a(1)) = a(2)^2;
-y_fit(a(1)+1:(FL_p)) = a(2)^2+a(3)^2;
+y_fit(a(1)+1:(FL_p)) = a(2)^2 + a(3)^2;
 y_fit((FL_p)+1:end) = a(4)^2;
 
 DD = sum((y_y - y_fit).^2);

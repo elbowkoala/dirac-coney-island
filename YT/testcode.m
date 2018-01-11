@@ -19,19 +19,21 @@ p=0;
 result1=zeros(300,800,961);
 result2=zeros(300,800,961);
 
-
 for k=1:961
     
 A=zeros(302,802);
 A1=zeros(302,802);
 A2=zeros(302,802);
-    
-    for m=1:300
-        for n=1:800
-                A(m+1,n+1)=cones(m,n,k);          
-        end
-    end
-  
+
+for i=2:301
+ for j=2:801
+     a=rand;
+     if a>0.5
+  A(i,j)=a;
+     end
+ end
+end
+
 for m=1:300
     for n=1:800
         if A(m+1,n+1)~=0
@@ -47,25 +49,9 @@ for m=1:300
     end
 end
 
-
 end
+mesh(A1)
 
-test1=zeros(300,800);
-test2=zeros(300,800);
-for m=1:300
-    for n=1:800
-        test1(m,n)=result1(m,n,961);
-        test2(m,n)=result2(m,n,961);
-    end
-end
-I1=zeros(1,p);
-for i=1:p
-   I1(1,i)=I0(1,i);
-end
 
-% mesh(test1)
 
-H=hist(I1,10000)
 
-%mesh(test2)
-%mesh(ek)

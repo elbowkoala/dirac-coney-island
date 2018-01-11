@@ -5,7 +5,7 @@ if load_data == 1
     load 'rfc_big_scan_170927.mat';
     load rfc_FL_scan_170927.mat;
     load rfc_ncorr_scan_171019w.mat;
-    load kLOS_171122.mat;
+    load kLOS_180111.mat;
     load pre_dos_Es;
     load BCB_E_scan.mat;
     bad_DPI = find(DPI_big < 200);
@@ -16,57 +16,46 @@ global x_x y_y FL_param
 global x__x y__y %bcb_find dos_start
 wannasee = 1;
 
-dos_k_cutoff = 90;
+dos_k_cutoff = 100;
 ssKpm = 5;
 bcbmarj = 25;
 a1_range = [0:10:50];
-bcb_sigma = 8;
+bcb_sigma = 5;
+bcb_medfilt = 10;
 dos_sigma = 3;
+dos_medfilt = 10;
 
 
-final_bcb_Rsquareds_180110 = zeros(1,961);
-bcb_finds_180110 = zeros(1,961);
-final_dos_Rsquareds_180110 = zeros(1,961);
-dos_Es_180110 = zeros(1,961);
-dos_Ks_180110 = zeros(1,961);
-scan_errors_180110 = zeros(1,961);
+final_bcb_Rsquareds_180111 = zeros(1,961);
+bcb_finds_180111 = zeros(1,961);
+final_dos_Rsquareds_180111 = zeros(1,961);
+dos_Es_180111 = zeros(1,961);
+dos_Ks_180111 = zeros(1,961);
+scan_errors_180111 = zeros(1,961);
 
 tic;
 for i =  round(961*rand)
-	if ismember(i, bad_DPI) == 1
+	while ismember(i, bad_DPI) == 1
         disp(['Scan ',num2str(i),' is bad DPI']);
-        continue
+        i = round(961*rand)%continue
     end 
     
     try 
-        %rfc_ncorr_scan
-        
         cone = result1i(:,:,i);
         
-        %{
-        [s_row, s_col] = ind2sub([31,31],i);
-        [s_sites] = Neighbor_sites(s_row,s_col,31,31);
-        
-        for ii = s_sites'
-            [ss_row, ss_col] = ind2sub([31,31],ii);
-            site_dist = sum(abs([s_row,s_col] - [ss_row,ss_col]));
-            if site_dist == 2
-                continue
-            end
-            cone = cone + result1i(:,:,ii);
-            disp('added'),disp(num2str(ii))
-        end
-        %}
-        ss = imgaussfilt(cone,bcb_sigma);   
-        %ss(ss>(mean(ss(:))+2.5*std(ss(:)))) = mean(ss(:))+2.5*std(ss(:));
-        ssK = kLOS(i);%rfc_ks_after(i);
+
+        ss = medfilt2(imgaussfilt(cone,bcb_sigma),[bcb_medfilt,bcb_medfilt]);   
+        ssK = kLOS(i);
         sss = 1000*sum( ss(ssK-ssKpm : ssK+ssKpm,:));
         smin = 399+find(sss(:,400:550)==min(sss(:,400:550)));
         
+        smax = 449+find(sss(:,450:end)==max(sss(:,450:end)));
+        maybe_bcb = smin-1+find(sss(:,smin:end)>sss(smax)/2,1,'first');
         %center_EDC_mid_min = find(sss==min(sss(400:500)));
         %[pks,locs] = findpeaks(sss,'MinPeakProminence',.1*max(sss));
         %CBS_180109(i) = locs(find(locs>center_EDC_mid_min,1,'first'));
         %figure, findpeaks(sss,[1:length(sss)],'MinPeakProminence',.1*max(sss),'Annotate','extents')
+        
         
         
         y_y = sss(smin-bcbmarj:end);
@@ -75,8 +64,8 @@ for i =  round(961*rand)
         
         SS_tot = sum((y_y-mean(y_y)).^2);
         %a1 = bcbmarj+10;%find(y_y(bcbmarj:bcbmarj+50) == max(y_y(bcbmarj:bcbmarj+50)));
-        a2 = sss(smin);
-        a3 = max(y_y)-a2;
+        a2 = sqrt(sss(smin));
+        a3 = sqrt(max(y_y)-a2^2);
         a4 = 0;
 
         a1_trials = zeros(4,length(a1_range));
@@ -92,7 +81,7 @@ for i =  round(961*rand)
             a1_Rs(a1_n) = R_squared;
             a1_n = a1_n+1;
         end
-        best_a1_n = find(a1_Rs==max(a1_Rs));
+        best_a1_n = find(a1_Rs==max(a1_Rs),1,'first');
         afinal = a1_trials(:,best_a1_n)';
         bcb_find = smin - bcbmarj + afinal(1);
 
@@ -101,27 +90,29 @@ for i =  round(961*rand)
         y_fit(afinal(1)+1:round(FL_param)) = afinal(2)^2+afinal(3)^2;
         y_fit(round(FL_param)+1:end) = afinal(4)^2;
         
-        bcb_finds_180110(i) = bcb_find;
+        bcb_finds_180111(i) = bcb_find;
         %final_bcb_params(:,i) = afinal';
-        final_bcb_Rsquareds_180110(i) = R_squared;
-        
-        dos_start = 199+find(sss(200:250)==max(sss(200:250)),1,'last');%round(pre_dos_Es(i)-150);
-        dos_end = round(bcb_finds_180110(i));%min([500,round(bcb_finds(i))]);
+        final_bcb_Rsquareds_180111(i) = R_squared;
+        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+        %%%%ADDED THE PLUS 20 ON DOS_START%%%%%%%%%%%%%%%%%
+        dos_start = 20+199+find(sss(200:250)==max(sss(200:250)),1,'last');%round(pre_dos_Es(i)-150);
+        dos_end = round(bcb_finds_180111(i));
         
         %%Now use found bcb to do DOS fit%%
-        ssKs = ssK + [-10:1:10];
+        ssKs = ssK + [-3:1:3];
         kLOS_Rsquareds = zeros(size(ssKs));
         kLOS_intercepts = zeros(size(ssKs));
         kLOS_y__fit = zeros(length(ssKs),(dos_end-dos_start+1));
         kLOS_params = zeros(length(ssKs),4);
-        for ssK_i = 1%:length(ssKs)
+        for ssK_i = 1:length(ssKs)
             
-            %kwts = abs([1:size(ss,1)]-ssKs(ssK_i));
-            kwts = abs([1:size(ss,1)]-ssK);
+            kwts = abs([1:size(ss,1)]-ssKs(ssK_i));
+            %kwts = abs([1:size(ss,1)]-ssK);
             kwts(kwts>dos_k_cutoff) = 0;
-            DOS = sum(repmat(kwts, size(ss,2), 1)' .*imgaussfilt(cone,dos_sigma));
+            dos_cone_mod = medfilt2(imgaussfilt(cone,dos_sigma),[dos_medfilt,dos_medfilt]);
+            DOS = sum(repmat(kwts, size(ss,2), 1)' .* dos_cone_mod);
 
-            %dos_start = find(DOS(200:250) == max(DOS(200:250))) + 199 + 20;
             y__y = DOS(dos_start : dos_end);% min(500,bcb_find));
             x__x = (1:length(y__y));
 
@@ -164,17 +155,16 @@ for i =  round(961*rand)
             title(['kLOS=',num2str(ssKs(ssK_i))])
             %}
         end
-        %max_kLOS_i = find(kLOS_Rsquareds==max(kLOS_Rsquareds));
-        max_kLOS_i = 1;
-        %dos_K = ssKs(max_kLOS_i);
-        dos_K = ssK;
-        %dos_E = kLOS_intercepts(max_kLOS_i) + dos_start - 1; 
-        dos_E = kLOS_intercepts(1)+dos_start-1;
+        max_kLOS_i = find(kLOS_Rsquareds==max(kLOS_Rsquareds),1,'first');
+        dos_K = ssKs(max_kLOS_i);
+        %max_kLOS_i = 1;
+        %dos_K = ssK;
+        dos_E = kLOS_intercepts(max_kLOS_i)+dos_start-1;
         
-        dos_Es_180110(i) = dos_E;
-        dos_Ks_180110(i) = dos_K; 
+        dos_Es_180111(i) = dos_E;
+        dos_Ks_180111(i) = dos_K; 
         final_dos_params(:,i) = kLOS_params(max_kLOS_i,:)';
-        final_dos_Rsquareds_180110(i) = kLOS_Rsquareds(max_kLOS_i);
+        final_dos_Rsquareds_180111(i) = kLOS_Rsquareds(max_kLOS_i);
         
         
         
@@ -182,12 +172,12 @@ for i =  round(961*rand)
 
         if wannasee == 1
             figure,
-            subplot(2,2,1), plot(kLOS_Rsquareds)
+            subplot(2,2,1), %plot(kLOS_Rsquareds)
             %plot(x_x+smin-bcbmarj,y_y,'k'), hold on;
             plot([1:length(sss)],sss,'k'), hold on;
             plot(x_x+smin-bcbmarj,y_fit,'r'), hold off;
             xlim([0,size(ss,2)])
-            title(['BCB=',num2str(bcb_finds_180110(i))])
+            title(['BCB=',num2str(bcb_finds_180111(i)),' Rsq=',num2str(round(R_squared,3))])
 
     %         subplot(2,2,2),
     %         plot(x__x, y__y,'k'), hold on;
@@ -196,27 +186,50 @@ for i =  round(961*rand)
     %             
             subplot(2,2,3), imagesc(ss), axis xy, hold on;
             %plot([0,size(ss,2)],[kLOS(i),kLOS(i)],'w'), hold on;
-            plot([bcb_finds_180110(i),bcb_finds_180110(i)],[1,size(ss,1)],'w'), hold on;
-            plot(dos_Es_180110(i), dos_Ks_180110(i), 'r*'), hold on;
+            plot([bcb_finds_180111(i),bcb_finds_180111(i)],[1,size(ss,1)],'w'), hold on;
+            plot([maybe_bcb,maybe_bcb],[1,size(ss,1)],'c'), hold on;
+            plot(dos_Es_180111(i), dos_Ks_180111(i), 'r*'), hold on;
+            plot(pre_dos_Es(i),kLOS(i),'w*'), hold on;
             %plot([CBS_180109,CBS_180109],[1,300],'c'), hold on;
             plot([AVE_FL],[1,300],'r'), hold off;
-            title(['DPI=',num2str(round(DPI_big(i)))])
+            title(['maybeBCB=',num2str(round(maybe_bcb))])
 
             %plot([0,size(ss,2)],[dos_K,dos_K],'r'), hold on;
 
             subplot(2,2,2),
-            plot(x__x, y__y,'k'), hold on;
-            plot(x__x, [kLOS_y__fit(max_kLOS_i,:)], 'r'), hold off;
-            title(['E=',num2str(round(dos_E,2)),'  Rsq=',num2str(round(final_dos_Rsquareds_180110(i),3))])
+            yyaxis left
+            %plot(x__x, y__y,'k'), hold on;
+            plot([1:length(DOS)],DOS,'k'), hold on;
+            plot(x__x+dos_start,[kOS_y__fit(max_kLOS_i,:)],'r'),
+            %plot(x__x, [kLOS_y__fit(max_kLOS_i,:)], 'r'), 
+            yyaxis right
+            plot(min(x__x):((max(x__x)-min(x__x))/length(kLOS_Rsquareds)):max(x__x)-1,kLOS_Rsquareds,'r-')
+            title(['E=',num2str(round(dos_E,2)),'  Rsq=',num2str(round(final_dos_Rsquareds_180111(i),3))])
 
             subplot(2,2,4)
-            imagesc(imgaussfilt(cones(:,:,i),5)), axis xy, hold on;
-            plot(pre_dos_Es(i),kLOS(i),'w*'), hold on;
-            plot(dos_Es_180110(i), dos_Ks_180110(i), 'r*'), hold on;
-            plot([bcb_finds_180110(i),bcb_finds_180110(i)],[1,size(ss,1)],'w'), hold off;
-
+            imagesc([1:300],fliplr([1:800]),rot90(dos_cone_mod)), axis xy, hold on;
+            %plot(pre_dos_Es(i),kLOS(i),'w*'), hold on;
+            plot(kLOS(i),pre_dos_Es(i),'w*'), hold on;
+            plot(dos_Ks_180111(i),dos_Es_180111(i),'r*'), hold on;
+            plot([kLOS(i),kLOS(i)],[1,800],'w'), hold on;
+            plot([1,size(dos_cone_mod,1)],[maybe_bcb,maybe_bcb],'c'), hold on;
+            plot([1,size(dos_cone_mod,1)],[bcb_finds_180111(i),bcb_finds_180111(i)],'w'), hold off;
+            %plot(dos_Es_180110(i), dos_Ks_180110(i), 'r*'), hold on;
+            %plot([bcb_finds_180110(i),bcb_finds_180110(i)],[1,size(ss,1)],'w'), hold off;
+            title(['DPI=',num2str(round(DPI_big(i)))])
             suptitle(['i=',num2str(i)])
-
+            
+%             figure, 
+%             subplot(2,1,1), imagesc(ss), axis xy
+%             
+%             subplot(2,1,2), 
+%             yyaxis left 
+%             plot(sss), hold on;
+%             plot([dos_Es_180111(i),dos_Es_180111(i)],[0,10000],'r')
+%             ylim([0,max(sss)+50])
+%             yyaxis right 
+%             plot(sum(ss))
+            
             
 %             figure,
 %             subplot(2,2,1)
@@ -248,7 +261,7 @@ for i =  round(961*rand)
         
     catch ME
         disp('Error occured with scan '); disp(i)
-        scan_errors_180110(i) = 1;
+        scan_errors_180111(i) = 1;
     end
 end
 toc
