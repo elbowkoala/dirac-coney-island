@@ -37,18 +37,23 @@ disp('Template step completed '), toc
 %%%%%%%%% Round 1 Scan with Large Window Including Bulk Bands %%%%%%%%%%%%%
 
 scan_maxes_FL = zeros(1,num_scans);
-%scan_spread = zeros(1,num_scans);
-%figure,
+
 NNN=0;
-for i =  1:num_scans%round(961*rand)%[round(961*rand),round(961*rand),round(961*rand),round(961*rand),round(961*rand), round(961*rand)]%1:1:num_scans;  
+for i =  round(961*rand)%[round(961*rand),round(961*rand),round(961*rand),round(961*rand),round(961*rand), round(961*rand)]%1:1:num_scans;  
     NNN=NNN+1;
     if rem(i,100) == 0
         disp(['Now on scan ',num2str(i)])
     end
-    
-    scone = cones(:,:,i);
-    
-    scone = imgaussfilt(scone, rfc_FL_sigma);
+    %scone = cones(:,:,i);
+    scone = zeros(300,800);
+    scone = scone + result1i(:,:,i);
+    [s_row, s_col] = ind2sub([31,31],i);
+    [s_sites] = Neighbor_sites(s_row,s_col,31,31);
+
+    for ii = s_sites'
+        scone = scone + result1i(:,:,ii);
+    end
+    scone = imgaussfilt(scone, 5);%rfc_FL_sigma);
     scone_b = Binning_2d(scone, bin_E, bin_k);
     scone_b = scone_b(:,round(100*5/bin_E)+1:end);
     scone_bg = mat2gray(scone_b);
@@ -67,14 +72,15 @@ for i =  1:num_scans%round(961*rand)%[round(961*rand),round(961*rand),round(961*
     rfc_FL_ks(i) = (y_offset + window_FL_k_coor  -1)*bin_k + bin_k/2;    
    
     scan_gray = mat2gray(scan);
-    %{
+    figure, 
+    
     subplot(1,4,1), %imagesc(scan_Kaxis,scan_Eaxis,rot90(scan,-1)), axis xy, title(num2str(i)), hold on;
     imagesc(rot90(scan,-1)), axis xy, hold on;
     plot(size(scan,1)-y_peak,x_peak,'b*'), hold off;
-        title({['Sc max=',num2str(round(scan_maxes_small(i),3))];['spread=',num2str(round(scan_spread(i)))]});
+        %title({['Sc max=',num2str(round(scan_maxes_small(i),3))];['spread=',num2str(round(scan_spread(i)))]});
         
     subplot(1,4,2), imagesc(rot90(rfc_FL_bwg,-1)), axis xy;
-    title(['DPI=',num2str(round(DPI_small(i),2))]);
+    %title(['DPI=',num2str(round(DPI_small(i),2))]);
 
     
     subplot(1,4,3), imagesc(rot90(scone_bg,-1)), axis xy, hold on;
@@ -88,7 +94,7 @@ for i =  1:num_scans%round(961*rand)%[round(961*rand),round(961*rand),round(961*
     subplot(1,4,4), imagesc(rot90(imgaussfilt(cones(:,:,i),rfc_FL_sigma),-1)), axis xy, hold on;
     plot([1,300],[rfc_FL_Es(i),rfc_FL_Es(i)],'w'), hold off;
     title(['i=',num2str(i)]);
-    %}
+    
 end
 disp('Scanning Round 1 completed'), toc
 

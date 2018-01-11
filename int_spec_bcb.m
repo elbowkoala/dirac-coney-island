@@ -59,6 +59,7 @@ full_arpes = zeros(size(E_interp));
 regional_arpes=zeros([size(E_interp),size(region_list,1)]);
 
 involved_scans = zeros(1,961);
+involved_scans_panel = zeros(1,961,size(region_list,1));
 mean_DPE_eV = zeros(1,size(region_list,1));
 mean_FL_eV = zeros(1,size(region_list,1));
 map_regions = cat(3,[]);
@@ -68,10 +69,12 @@ for iii=1:size(region_list,1)
     
      for jjj=find(region_list{iii}==1)'
          involved_scans(jjj) = involved_scans(jjj)+1;
+         involved_scans_panel(1,jjj,iii) = involved_scans_panel(1,jjj,iii)+1;
          nnn = nnn+1;
          [map_y, map_x] = ind2sub([31,31],jjj);
          map_regions(1,nnn,iii) = map_x;
          map_regions(2,nnn,iii) = map_y;
+         
          cone = result1i(:,:,jjj);
          [E_coor, K_coor] = meshgrid(1:size(cone,2),1:size(cone,1));
          E_coor = E_coor - dirac_Es(jjj);  

@@ -1,0 +1,77 @@
+% BK = 5*K_bin*pix2invA;%.025 %+/- invA about k=0
+% BE1 = 36*E_bin*pix2eV; % bottom of box binding energy eV
+% BE2 = 30*E_bin*pix2eV; % top of box binding energy eV
+% 
+% disp({['BK=',num2str(BK)];[' BE1=',num2str(BE1)];[' BE2=',num2str(BE2)]})
+% 
+% bk = round(BK / pix2invA);
+% %disp(['bk/kbin=',num2str(bk/K_bin)])
+% be1 = 36*pix2eV; round(BE1 / pix2eV);
+% be2 = round(BE2 / pix2eV);
+
+boxtop_eV = .230;% 0.2;
+boxbot_eV = .310;%0.30;
+box_khalfwidth_invA = 0.025;
+be2 = round(boxtop_eV/pix2eV);
+be1 = round(boxbot_eV/pix2eV);
+bk = round(box_khalfwidth_invA/pix2invA);
+
+
+PBIs = zeros(1,size(involved_scans_panel,3));
+panel_nnn = zeros(1,size(involved_scans_panel,3));
+scan_box_events = zeros(size(involved_scans_panel));
+all_panels = zeros(1,961);
+for panel = 1:size(involved_scans_panel,3)
+    
+    for i = find(involved_scans_panel(:,:,panel)>0)
+        res1i = result1i(:,:,i);
+        current_events = sum(sum(res1i(round(kLOS(i))-bk:round(kLOS(i))+bk,...
+                                                        round(rfc_FL_Es(i))-be1:round(rfc_FL_Es(i))-be2)));
+        scan_box_events(1,i,panel) = current_events;
+        all_panels(i) = all_panels(i) + current_events;
+    end
+    panel_scans = scan_box_events(:,:,panel);
+    panel_nnn(panel) = length(panel_scans(panel_scans>0));
+    PBIs(panel) = mean(panel_scans(panel_scans>0));
+end
+
+panels_mean = mean(PBIs);
+MBI = panels_mean;
+
+figure,
+
+II_n = 1;
+for II = 1:size(region_list,1)
+    spec = out_spec{1,II};
+    eax = out_eax{1,II};
+    kax = out_kax{1,II};
+    
+    PBI = round(PBIs(II));
+    nnn = panel_nnn(II);
+    
+    poi = ((MBI^PBI)*(exp(-MBI))) / factorial(PBI);
+    
+    ax = subplot(1,size(region_list,1),II_n)
+    imagesc(kax, flip(eax), rot90(norman(spec,0,5))), axis xy, hold on;
+    descr = {[num2str(B_interval_list_abs(II,1)),'-',num2str(B_interval_list_abs(II,2))]};
+    axes(ax)
+    text(-.05,-.8,descr)    
+    title({['PBI=',num2str(PBI)];['P=',num2str(poi)];['nnn=',num2str(nnn)]})
+    ylim([-.7,0.15])
+    II_n = II_n+1;
+    
+end
+suptitle(['MBI=',num2str(MBI)])
+
+poi_x = [1:1:100];
+poi_yfactorials = zeros(size(poi_x));
+for ii = poi_x
+    poi_yfactorials(ii) = factorial(ii);
+end
+poi_y = ((MBI.^poi_x)*exp(-MBI)) ./ poi_yfactorials;
+figure, 
+yyaxis right 
+histogram(all_panels(all_panels>0),20), hold on;
+yyaxis left 
+plot(poi_x, poi_y), hold off;
+title({['MBI = ',num2str(MBI),' events'];['Box E range: ',num2str(boxtop_eV),' - ',num2str(boxbot_eV),' eV'];['Box K halfrang: ',num2str(box_khalfwidth_invA),' invA']})

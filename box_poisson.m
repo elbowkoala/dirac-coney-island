@@ -33,7 +33,7 @@ for i = find(involved_scans>0)
                                                     
     indiv_SBI(i) = round(sum(sum(res1i(round(kLOS(i))-bk:round(kLOS(i))+bk,...
                                                         round(rfc_FL_Es(i))-be1:round(rfc_FL_Es(i))-be2))));
-    indiv_PBs(i) = (MBI^indiv_SBI(i))*exp(-MBI) / factorial(indiv_SBI(i));
+    %indiv_PBs(i) = (MBI^indiv_SBI(i))*exp(-MBI) / factorial(indiv_SBI(i));
      if i == ZZ
         figure, imagesc(imgaussfilt(res1i,5)), axis xy, hold on;
         plot([rfc_FL_Es(i),rfc_FL_Es(i)],[1,size(res1i,1)],'r'), hold on;
@@ -64,7 +64,7 @@ for II = 1:size(region_list,1)
     box4= K0p + round(bk/K_bin);%find(kax<+BK,1,'last')
     
     disp(['box size=',num2str(size(spec(box3:box4,box1:box2)))])
-
+    
     
     spec_boxIs(II) = sum(sum(spec(box3:box4,box1:box2))) / out_nnn(II);
     
@@ -101,4 +101,19 @@ for ii = poi_x
 end
 poi_y = ((MBI.^poi_x)*exp(-MBI)) ./ poi_yfactorials;
 figure, plot(poi_x, poi_y)
+
+panel_box_events = zeros(1,size(involved_scans_panel,3));
+scan_box_events = zeros(size(involved_scans_panel));
+for panel = 1:size(involved_scans_panel,3)
+    
+    for i = find(involved_scans_panel(:,:,panel)>0)
+        scan_box_events(1,i,panel) = sum(sum(res1i(round(kLOS(i))-bk:round(kLOS(i))+bk,...
+                                                        round(rfc_FL_Es(i))-be1:round(rfc_FL_Es(i))-be2)));
+    end
+    panel_scans = scan_box_events(:,:,panel);
+    panel_box_events(panel) = mean(panel_scans(panel_scans>0));
+end
+
+panels_mean = mean(panel_box_events);
+
 

@@ -1,4 +1,4 @@
-%{
+ m%{
 result1i = zeros(size(result1));
 for i = 1:961
     ress = result1(:,:,i);
@@ -25,15 +25,31 @@ indiv_PBs = zeros(1,length(find(involved_scans>0)));
 indiv_SBI = zeros(1,length(find(involved_scans>0)));
 ZZ = round(961*rand);
 
-for i = find(involved_scans>0)
 
+for iii = 1:size(region_list,1)
+    nnn = 0;
+    for jjj = find(involved_scans_panel(:,:,iii)>0)
+        res1i = result1i(:,:,jjj);
+        indiv_SBI(iii, jjj) = sum(sum(res1i(round(kLOS(jjj))-bk:round(kLOS(jjj))+bk,...
+                                                                round(rfc_FL_Es(jjj))-be1:round(rfc_FL_Es(jjj))-be2)));
+        panel_SBI(iii) = panel_SBI(iii) + indiv_SBI(iii,jjj);
+        nnn = nnn+1;
+    end
+    panel_SBI(iii) = panel_SBI(iii) / nnn;
+    
+        
+
+
+
+for i = find(involved_scans>0)
     res1i = result1i(:,:,i);
-    boxI = boxI + sum(sum(res1i(round(kLOS(i))-bk:round(kLOS(i))+bk,...
-                                                        round(rfc_FL_Es(i))-be1:round(rfc_FL_Es(i))-be2)));
-                                                    
     indiv_SBI(i) = round(sum(sum(res1i(round(kLOS(i))-bk:round(kLOS(i))+bk,...
-                                                        round(rfc_FL_Es(i))-be1:round(rfc_FL_Es(i))-be2))));
-    indiv_PBs(i) = (MBI^indiv_SBI(i))*exp(-MBI) / factorial(indiv_SBI(i));
+                                                        round(rfc_FL_Es(i))-be1:round(rfc_FL_Es(i))-be2))));     
+    boxI = boxI + indiv_SBI(i);%round(sum(sum(res1i(round(kLOS(i))-bk:round(kLOS(i))+bk,...
+                                                        %round(rfc_FL_Es(i))-be1:round(rfc_FL_Es(i))-be2))));                                                    
+    %indiv_SBI(i) = round(sum(sum(res1i(round(kLOS(i))-bk:round(kLOS(i))+bk,...
+                                                        %round(rfc_FL_Es(i))-be1:round(rfc_FL_Es(i))-be2))));
+    %indiv_PBs(i) = (MBI^indiv_SBI(i))*exp(-MBI) / factorial(indiv_SBI(i));
      if i == ZZ
         figure, imagesc(imgaussfilt(res1i,5)), axis xy, hold on;
         plot([rfc_FL_Es(i),rfc_FL_Es(i)],[1,size(res1i,1)],'r'), hold on;
@@ -48,9 +64,19 @@ end
 mean_boxI = boxI / length(find(involved_scans>0));
 MBI = mean_boxI;%(60+50+47+47+46+54+58+62+69)/9;%
 
+for ii = find(involved_scans>0)
+    res1i = result1i(:,:,ii);
+    %boxI = boxI + sum(sum(res1i(round(kLOS(i))-bk:round(kLOS(i))+bk,...
+                                                        %round(rfc_FL_Es(i))-be1:round(rfc_FL_Es(i))-be2)));
+    %indiv_SBI(ii) = round(sum(sum(res1i(round(kLOS(ii))-bk:round(kLOS(ii))+bk,...
+                                                        %round(rfc_FL_Es(ii))-be1:round(rfc_FL_Es(ii))-be2))));
+    indiv_PBs(ii) = (MBI^indiv_SBI(ii))*exp(-MBI) / factorial(indiv_SBI(ii));
+end
+
+
+
 spec_boxIs = zeros(1,size(region_list,1));
 figure,
-
 II_n = 1;
 for II = 1:size(region_list,1)
     spec = out_spec{1,II};
@@ -100,5 +126,8 @@ for ii = poi_x
     poi_yfactorials(ii) = factorial(ii);
 end
 poi_y = ((MBI.^poi_x)*exp(-MBI)) ./ poi_yfactorials;
-figure, plot(poi_x, poi_y)
+%figure, plot(poi_x, poi_y)
 
+figure, histogram(indiv_SBI(indiv_SBI>0),50), hold on;
+yyaxis right
+plot(poi_x,poi_y)
